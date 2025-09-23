@@ -8,9 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TypographyH1, TypographyH3, TypographyMuted, TypographyLead } from '@/components/ui/typography';
-import { Plus, Users } from 'lucide-react';
+import { Plus, Users, UserCheck } from 'lucide-react';
 import PlayerFormDialog from './player-form-dialog';
 import DeletePlayerDialog from './delete-player-dialog';
+import OfficialFormDialog from './official-form-dialog';
+import DeleteOfficialDialog from './delete-official-dialog';
 
 interface Player {
   id: string;
@@ -31,6 +33,15 @@ interface Player {
   createdAt: Date;
 }
 
+interface Official {
+  id: string;
+  namaLengkap: string;
+  posisi: string;
+  nomorTelepon: string;
+  fotoOfficial: string | null;
+  createdAt: Date;
+}
+
 interface Team {
   id: string;
   name: string;
@@ -44,6 +55,7 @@ interface Team {
     maxPlayersPerTeam: number;
   } | null;
   players: Player[];
+  officials: Official[];
 }
 
 interface TeamPlayersClientProps {
@@ -55,6 +67,9 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
   const [showPlayerForm, setShowPlayerForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [deletingPlayer, setDeletingPlayer] = useState<Player | null>(null);
+  const [showOfficialForm, setShowOfficialForm] = useState(false);
+  const [editingOfficial, setEditingOfficial] = useState<Official | null>(null);
+  const [deletingOfficial, setDeletingOfficial] = useState<Official | null>(null);
 
   const refreshPlayers = async () => {
     try {
@@ -65,6 +80,18 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
       }
     } catch (error) {
       console.error('Failed to refresh players:', error);
+    }
+  };
+
+  const refreshOfficials = async () => {
+    try {
+      const response = await fetch(`/api/public/teams/${team.token}/officials`);
+      if (response.ok) {
+        const data = await response.json();
+        setTeam(prev => ({ ...prev, officials: data.officials }));
+      }
+    } catch (error) {
+      console.error('Failed to refresh officials:', error);
     }
   };
 
@@ -86,6 +113,24 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
     toast.success('Atlet berhasil dihapus dari tim!');
   };
 
+  const handleOfficialAdded = () => {
+    refreshOfficials();
+    setShowOfficialForm(false);
+    toast.success('Official berhasil ditambahkan!');
+  };
+
+  const handleOfficialUpdated = () => {
+    refreshOfficials();
+    setEditingOfficial(null);
+    toast.success('Data official berhasil diperbarui!');
+  };
+
+  const handleOfficialDeleted = () => {
+    refreshOfficials();
+    setDeletingOfficial(null);
+    toast.success('Official berhasil dihapus dari tim!');
+  };
+
   const getPositionColor = (position: string) => {
     const colors: { [key: string]: string } = {
       'Outside Hitter': 'bg-blue-100 text-blue-800',
@@ -94,6 +139,16 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
       'Libero': 'bg-orange-100 text-orange-800',
       'Opposite Hitter': 'bg-red-100 text-red-800',
       'Defensive Specialist': 'bg-gray-100 text-gray-800',
+    };
+    return colors[position] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getOfficialPositionColor = (position: string) => {
+    const colors: { [key: string]: string } = {
+      'Manager': 'bg-indigo-100 text-indigo-800',
+      'Head Coach': 'bg-emerald-100 text-emerald-800',
+      'Assistant Coach 1': 'bg-yellow-100 text-yellow-800',
+      'Assistant Coach 2': 'bg-pink-100 text-pink-800',
     };
     return colors[position] || 'bg-gray-100 text-gray-800';
   };
@@ -276,8 +331,133 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
               )}
             </CardContent>
           </Card>
+
+          {/* Officials Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <CardTitle>Daftar Official Tim</CardTitle>
+                    <Badge variant="secondary" className="text-sm font-medium">
+                      {team.officials.length}/4 official
+                    </Badge>
+                  </div>
+                  <CardDescription>
+                    Kelola data official yang menyertai tim (Manager, Head Coach, Assistant Coach)
+                    {4 - team.officials.length > 0 && (
+                      <span className="text-green-600 ml-1">
+                        • masih bisa ditambahkan {4 - team.officials.length} official lagi
+                      </span>
+                    )}
+                    {team.officials.length >= 4 && (
+                      <span className="text-amber-600 ml-1">
+                        • tim sudah mencapai batas maksimal official
+                      </span>
+                    )}
+                  </CardDescription>
+                </div>
+                <Button
+                  onClick={() => setShowOfficialForm(true)}
+                  disabled={team.officials.length >= 4}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tambah Official
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {team.officials.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                    <UserCheck className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <div className="mt-6 space-y-2">
+                    <TypographyH3>Belum ada official terdaftar</TypographyH3>
+                    <TypographyMuted>
+                      Mulai dengan menambahkan official pertama untuk tim Anda.
+                    </TypographyMuted>
+                  </div>
+                  <Button
+                    className="mt-6"
+                    onClick={() => setShowOfficialForm(true)}
+                    disabled={team.officials.length >= 4}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Tambah Official Pertama
+                  </Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[80px]">Foto</TableHead>
+                      <TableHead>Nama Lengkap</TableHead>
+                      <TableHead>Posisi</TableHead>
+                      <TableHead>Nomor Telepon/WhatsApp</TableHead>
+                      <TableHead className="w-[70px] text-center">Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {team.officials.map((official) => (
+                      <TableRow key={official.id}>
+                        <TableCell>
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={official.fotoOfficial || ''} alt={official.namaLengkap} />
+                            <AvatarFallback className="text-xs">
+                              {official.namaLengkap.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{official.namaLengkap}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getOfficialPositionColor(official.posisi)}>
+                            {official.posisi}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-mono text-sm">{official.nomorTelepon}</div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-1 justify-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => setEditingOfficial(official)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => setDeletingOfficial(official)}
+                            >
+                              Hapus
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t bg-muted/30 py-8 mt-16">
+        <div className="container mx-auto px-6">
+          <div className="text-center text-sm text-muted-foreground">
+            powered by : Tornado Volleyball Club 2025
+          </div>
+        </div>
+      </footer>
 
       {/* Dialogs */}
       <PlayerFormDialog
@@ -307,6 +487,33 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
         player={deletingPlayer}
         teamToken={team.token}
         onPlayerDeleted={handlePlayerDeleted}
+      />
+
+      <OfficialFormDialog
+        open={showOfficialForm}
+        onOpenChange={setShowOfficialForm}
+        teamId={team.id}
+        teamToken={team.token}
+        existingOfficials={team.officials}
+        onOfficialAdded={handleOfficialAdded}
+      />
+
+      <OfficialFormDialog
+        open={!!editingOfficial}
+        onOpenChange={(open) => !open && setEditingOfficial(null)}
+        teamId={team.id}
+        teamToken={team.token}
+        existingOfficials={team.officials}
+        official={editingOfficial}
+        onOfficialUpdated={handleOfficialUpdated}
+      />
+
+      <DeleteOfficialDialog
+        open={!!deletingOfficial}
+        onOpenChange={(open) => !open && setDeletingOfficial(null)}
+        official={deletingOfficial}
+        teamToken={team.token}
+        onOfficialDeleted={handleOfficialDeleted}
       />
     </div>
   );

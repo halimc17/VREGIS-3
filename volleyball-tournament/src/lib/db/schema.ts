@@ -13,6 +13,9 @@ export const genderEnum = pgEnum('gender', ['putra', 'putri']);
 // Define player position enum
 export const positionEnum = pgEnum('position', ['Outside Hitter', 'Middle Blocker', 'Setter', 'Libero', 'Opposite Hitter', 'Defensive Specialist']);
 
+// Define official position enum
+export const officialPositionEnum = pgEnum('official_position', ['Manager', 'Head Coach', 'Assistant Coach 1', 'Assistant Coach 2']);
+
 // Define tournament status enum
 export const tournamentStatusEnum = pgEnum('tournament_status', ['open', 'closed']);
 
@@ -96,6 +99,18 @@ export const players = pgTable('players', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Officials table for team officials
+export const officials = pgTable('officials', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  teamId: uuid('team_id').notNull().references(() => teams.id, { onDelete: 'cascade' }),
+  namaLengkap: varchar('nama_lengkap', { length: 255 }).notNull(),
+  posisi: officialPositionEnum('posisi').notNull(),
+  nomorTelepon: varchar('nomor_telepon', { length: 20 }).notNull(),
+  fotoOfficial: varchar('foto_official', { length: 500 }), // Cloudinary URL
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 
 // Define relationships
 export const tournamentsRelations = relations(tournaments, ({ many }) => ({
@@ -109,6 +124,7 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
     references: [tournaments.id],
   }),
   players: many(players),
+  officials: many(officials),
   registrations: many(registrations),
 }));
 
@@ -130,6 +146,13 @@ export const playersRelations = relations(players, ({ one }) => ({
   }),
 }));
 
+export const officialsRelations = relations(officials, ({ one }) => ({
+  team: one(teams, {
+    fields: [officials.teamId],
+    references: [teams.id],
+  }),
+}));
+
 // Types for use in the application
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -142,6 +165,9 @@ export type NewTeam = typeof teams.$inferInsert;
 
 export type Player = typeof players.$inferSelect;
 export type NewPlayer = typeof players.$inferInsert;
+
+export type Official = typeof officials.$inferSelect;
+export type NewOfficial = typeof officials.$inferInsert;
 
 export type Registration = typeof registrations.$inferSelect;
 export type NewRegistration = typeof registrations.$inferInsert;
