@@ -32,7 +32,10 @@ export async function GET() {
 
     const allTournaments = await db.select().from(tournaments).orderBy(tournaments.createdAt);
 
-    return NextResponse.json(allTournaments);
+    return NextResponse.json({
+      success: true,
+      tournaments: allTournaments
+    });
 
   } catch (error) {
     console.error('Get tournaments error:', error);

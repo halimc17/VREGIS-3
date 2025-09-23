@@ -29,13 +29,9 @@ export interface TournamentFormData {
 
 export interface TeamRegistrationFormData {
   name: string;
-  captainName: string;
-  captainEmail: string;
-  captainPhone: string;
-  institution?: string;
-  playerCount: number;
-  experience: 'beginner' | 'intermediate' | 'advanced';
-  notes?: string;
+  gender: 'putra' | 'putri';
+  tournamentId: string;
+  logo?: File;
 }
 
 export interface DashboardStats {

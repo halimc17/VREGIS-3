@@ -7,6 +7,9 @@ export const roleEnum = pgEnum('role', ['user', 'administrator']);
 // Define tournament category enum
 export const categoryEnum = pgEnum('category', ['putra', 'putri', 'mixed']);
 
+// Define team gender enum
+export const genderEnum = pgEnum('gender', ['putra', 'putri']);
+
 // Define tournament status enum
 export const tournamentStatusEnum = pgEnum('tournament_status', ['open', 'closed']);
 
@@ -42,52 +45,27 @@ export const tournaments = pgTable('tournaments', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Teams table
+// Teams table - simplified for tournament registration
 export const teams = pgTable('teams', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
-  captainName: varchar('captain_name', { length: 255 }).notNull(),
-  captainEmail: varchar('captain_email', { length: 255 }).notNull(),
-  captainPhone: varchar('captain_phone', { length: 20 }).notNull(),
-  institution: varchar('institution', { length: 255 }),
-  playerCount: integer('player_count').notNull().default(6),
-  experience: varchar('experience', { length: 50 }).notNull(), // beginner, intermediate, advanced
-  notes: text('notes'),
+  gender: genderEnum('gender').notNull(),
+  tournamentId: uuid('tournament_id').notNull().references(() => tournaments.id, { onDelete: 'cascade' }),
+  logo: varchar('logo', { length: 500 }), // Cloudinary URL
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Team registrations for tournaments
-export const registrations = pgTable('registrations', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tournamentId: uuid('tournament_id').notNull().references(() => tournaments.id, { onDelete: 'cascade' }),
-  teamId: uuid('team_id').notNull().references(() => teams.id, { onDelete: 'cascade' }),
-  status: varchar('status', { length: 50 }).notNull().default('pending'), // pending, approved, rejected, waitlisted
-  registrationDate: timestamp('registration_date').defaultNow().notNull(),
-  paymentStatus: varchar('payment_status', { length: 50 }).notNull().default('unpaid'), // unpaid, paid, refunded
-  paymentDate: timestamp('payment_date'),
-  notes: text('notes'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
 
 // Define relationships
 export const tournamentsRelations = relations(tournaments, ({ many }) => ({
-  registrations: many(registrations),
+  teams: many(teams),
 }));
 
-export const teamsRelations = relations(teams, ({ many }) => ({
-  registrations: many(registrations),
-}));
-
-export const registrationsRelations = relations(registrations, ({ one }) => ({
+export const teamsRelations = relations(teams, ({ one }) => ({
   tournament: one(tournaments, {
-    fields: [registrations.tournamentId],
+    fields: [teams.tournamentId],
     references: [tournaments.id],
-  }),
-  team: one(teams, {
-    fields: [registrations.teamId],
-    references: [teams.id],
   }),
 }));
 
@@ -100,6 +78,3 @@ export type NewTournament = typeof tournaments.$inferInsert;
 
 export type Team = typeof teams.$inferSelect;
 export type NewTeam = typeof teams.$inferInsert;
-
-export type Registration = typeof registrations.$inferSelect;
-export type NewRegistration = typeof registrations.$inferInsert;

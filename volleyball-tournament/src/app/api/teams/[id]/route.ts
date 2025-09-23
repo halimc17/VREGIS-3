@@ -1,53 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/connection';
 import { teams, tournaments } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import { z } from 'zod';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 
-const teamSchema = z.object({
+const teamUpdateSchema = z.object({
   name: z.string().min(1, 'Team name is required'),
   gender: z.enum(['putra', 'putri']),
   tournamentId: z.string().uuid('Invalid tournament ID'),
-  logo: z.string().optional(), // Cloudinary URL
+  logo: z.string().optional(),
 });
 
-export async function GET() {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Get teams with tournament information
-    const allTeams = await db
-      .select({
-        id: teams.id,
-        name: teams.name,
-        gender: teams.gender,
-        logo: teams.logo,
-        createdAt: teams.createdAt,
-        tournament: {
-          id: tournaments.id,
-          name: tournaments.name,
-          category: tournaments.category,
-        }
-      })
-      .from(teams)
-      .leftJoin(tournaments, eq(teams.tournamentId, tournaments.id))
-      .orderBy(teams.createdAt);
-
-    return NextResponse.json({
-      success: true,
-      teams: allTeams,
-    });
-
-  } catch (error) {
-    console.error('Get teams error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
+    const teamId = params.id;
     const formData = await request.formData();
 
     const name = formData.get('name') as string;
@@ -56,7 +26,7 @@ export async function POST(request: NextRequest) {
     const logoFile = formData.get('logo') as File | null;
 
     // Validate input
-    const result = teamSchema.safeParse({
+    const result = teamUpdateSchema.safeParse({
       name,
       gender,
       tournamentId,
@@ -70,6 +40,20 @@ export async function POST(request: NextRequest) {
     }
 
     const teamData = result.data;
+
+    // Check if team exists
+    const existingTeam = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
+
+    if (existingTeam.length === 0) {
+      return NextResponse.json(
+        { error: 'Team not found' },
+        { status: 404 }
+      );
+    }
 
     // Check if tournament exists
     const tournament = await db
@@ -85,25 +69,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if team name + gender combination already exists
-    const existingTeams = await db
+    // Check if team name + gender combination already exists for other teams
+    const duplicateTeams = await db
       .select()
       .from(teams)
       .where(
         and(
           eq(teams.name, teamData.name),
-          eq(teams.gender, teamData.gender)
+          eq(teams.gender, teamData.gender),
+          ne(teams.id, teamId)
         )
       );
 
-    if (existingTeams.length > 0) {
+    if (duplicateTeams.length > 0) {
       return NextResponse.json(
         { error: `Tim ${teamData.name} dengan gender ${teamData.gender} sudah terdaftar` },
         { status: 400 }
       );
     }
 
-    let logoUrl: string | undefined;
+    let logoUrl: string | undefined = existingTeam[0].logo || undefined;
 
     // Handle logo upload to Cloudinary if provided
     if (logoFile && logoFile.size > 0) {
@@ -118,19 +103,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create team
-    const [newTeam] = await db.insert(teams).values({
-      ...teamData,
-      logo: logoUrl,
-    }).returning();
+    // Update team
+    const [updatedTeam] = await db
+      .update(teams)
+      .set({
+        ...teamData,
+        logo: logoUrl,
+        updatedAt: new Date(),
+      })
+      .where(eq(teams.id, teamId))
+      .returning();
 
     return NextResponse.json({
       success: true,
-      team: newTeam,
-    }, { status: 201 });
+      team: updatedTeam,
+    });
 
   } catch (error) {
-    console.error('Create team error:', error);
+    console.error('Update team error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -138,17 +128,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { searchParams } = new URL(request.url);
-    const teamId = searchParams.get('id');
-
-    if (!teamId) {
-      return NextResponse.json(
-        { error: 'Team ID is required' },
-        { status: 400 }
-      );
-    }
+    const teamId = params.id;
 
     // Check if team exists
     const existingTeam = await db
