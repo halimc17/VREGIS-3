@@ -7,22 +7,30 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function uploadToCloudinary(file: File): Promise<string> {
+export async function uploadToCloudinary(file: File, folder: string = 'team-logos'): Promise<string> {
   try {
     // Convert File to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+
+    // Set different transformations based on folder
+    const transformations = folder === 'player-photos'
+      ? [
+          { width: 400, height: 400, crop: 'fill' },
+          { quality: 'auto' }
+        ]
+      : [
+          { width: 200, height: 200, crop: 'fill' },
+          { quality: 'auto' }
+        ];
 
     // Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
           resource_type: 'auto',
-          folder: 'volleyball-tournament/team-logos',
-          transformation: [
-            { width: 200, height: 200, crop: 'fill' },
-            { quality: 'auto' }
-          ]
+          folder: `volleyball-tournament/${folder}`,
+          transformation: transformations
         },
         (error, result) => {
           if (error) {

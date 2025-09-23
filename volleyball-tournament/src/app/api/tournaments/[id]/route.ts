@@ -23,9 +23,10 @@ const updateTournamentSchema = z.object({
 // GET /api/tournaments/[id] - Get tournament by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user) {
@@ -35,7 +36,7 @@ export async function GET(
     const [tournament] = await db
       .select()
       .from(tournaments)
-      .where(eq(tournaments.id, params.id))
+      .where(eq(tournaments.id, id))
       .limit(1);
 
     if (!tournament) {
@@ -52,9 +53,10 @@ export async function GET(
 // PUT /api/tournaments/[id] - Update tournament
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== 'administrator') {
@@ -68,7 +70,7 @@ export async function PUT(
     const [existingTournament] = await db
       .select()
       .from(tournaments)
-      .where(eq(tournaments.id, params.id))
+      .where(eq(tournaments.id, id))
       .limit(1);
 
     if (!existingTournament) {
@@ -98,7 +100,7 @@ export async function PUT(
     const [updatedTournament] = await db
       .update(tournaments)
       .set(updateData)
-      .where(eq(tournaments.id, params.id))
+      .where(eq(tournaments.id, id))
       .returning();
 
     return NextResponse.json(updatedTournament);
@@ -115,9 +117,10 @@ export async function PUT(
 // DELETE /api/tournaments/[id] - Delete tournament
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== 'administrator') {
@@ -128,7 +131,7 @@ export async function DELETE(
     const [existingTournament] = await db
       .select()
       .from(tournaments)
-      .where(eq(tournaments.id, params.id))
+      .where(eq(tournaments.id, id))
       .limit(1);
 
     if (!existingTournament) {
@@ -136,7 +139,7 @@ export async function DELETE(
     }
 
     // Delete tournament
-    await db.delete(tournaments).where(eq(tournaments.id, params.id));
+    await db.delete(tournaments).where(eq(tournaments.id, id));
 
     return NextResponse.json({ message: 'Tournament deleted successfully' });
   } catch (error) {

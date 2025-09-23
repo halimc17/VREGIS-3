@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/connection';
-import { teams, tournaments } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { teams, tournaments, players } from '@/lib/db/schema';
+import { eq, and, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { uploadToCloudinary } from '@/lib/cloudinary';
+import { generateToken } from '@/lib/utils/token';
 
 const teamSchema = z.object({
   name: z.string().min(1, 'Team name is required'),
@@ -14,22 +15,26 @@ const teamSchema = z.object({
 
 export async function GET() {
   try {
-    // Get teams with tournament information
+    // Get teams with tournament information and player count
     const allTeams = await db
       .select({
         id: teams.id,
         name: teams.name,
         gender: teams.gender,
         logo: teams.logo,
+        token: teams.token,
         createdAt: teams.createdAt,
         tournament: {
           id: tournaments.id,
           name: tournaments.name,
           category: tournaments.category,
-        }
+        },
+        playerCount: sql<number>`COALESCE(${count(players.id)}, 0)`.as('playerCount')
       })
       .from(teams)
       .leftJoin(tournaments, eq(teams.tournamentId, tournaments.id))
+      .leftJoin(players, eq(teams.id, players.teamId))
+      .groupBy(teams.id, tournaments.id, tournaments.name, tournaments.category)
       .orderBy(teams.createdAt);
 
     return NextResponse.json({
@@ -118,10 +123,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Generate unique token
+    let token: string;
+    let isUnique = false;
+    while (!isUnique) {
+      token = generateToken();
+
+      // Check if token already exists
+      const existingToken = await db
+        .select()
+        .from(teams)
+        .where(eq(teams.token, token))
+        .limit(1);
+
+      if (existingToken.length === 0) {
+        isUnique = true;
+      }
+    }
+
     // Create team
     const [newTeam] = await db.insert(teams).values({
       ...teamData,
       logo: logoUrl,
+      token: token!,
     }).returning();
 
     return NextResponse.json({

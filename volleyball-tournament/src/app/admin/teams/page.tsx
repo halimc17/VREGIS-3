@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Plus, MoreHorizontal, Edit, Trash2, Filter, X, Search } from "lucide-react"
+import { Plus, MoreHorizontal, Edit, Trash2, Filter, X, Search, Copy, Link } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Team, Tournament } from "@/types"
 import TeamFormDialog from "@/components/team-form-dialog"
@@ -77,6 +78,26 @@ export default function TeamsPage() {
   }
 
   const hasActiveFilters = tournamentFilter !== "all" || genderFilter !== "all" || searchQuery !== ""
+
+  const copyTeamURL = (team: any) => {
+    if (!team.token) {
+      toast.error('Tim ini belum memiliki token', {
+        description: 'Silakan generate token terlebih dahulu.'
+      })
+      return
+    }
+
+    const url = `${window.location.origin}/team/${team.token}`
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('URL berhasil disalin!', {
+        description: `Link registrasi untuk tim ${team.name} telah disalin ke clipboard.`
+      })
+    }).catch(() => {
+      toast.error('Gagal menyalin URL', {
+        description: 'Silakan coba lagi atau salin URL secara manual.'
+      })
+    })
+  }
 
 
   if (loading) {
@@ -204,6 +225,7 @@ export default function TeamsPage() {
                 <TableHead>Team Name</TableHead>
                 <TableHead>Gender</TableHead>
                 <TableHead>Tournament</TableHead>
+                <TableHead>Jumlah Atlet</TableHead>
                 <TableHead>Registered</TableHead>
                 <TableHead className="w-[70px] text-center">Actions</TableHead>
               </TableRow>
@@ -241,6 +263,11 @@ export default function TeamsPage() {
                     )}
                   </TableCell>
                   <TableCell>
+                    <div className="text-sm font-medium">
+                      {team.playerCount || 0} atlet
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm text-muted-foreground">
                       {new Date(team.createdAt).toLocaleDateString()}
                     </div>
@@ -254,6 +281,10 @@ export default function TeamsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => copyTeamURL(team)}>
+                          <Link className="mr-2 h-4 w-4" />
+                          Copy Registration URL
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setEditingTeam(team)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit

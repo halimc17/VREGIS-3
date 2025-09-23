@@ -10,6 +10,9 @@ export const categoryEnum = pgEnum('category', ['putra', 'putri', 'mixed']);
 // Define team gender enum
 export const genderEnum = pgEnum('gender', ['putra', 'putri']);
 
+// Define player position enum
+export const positionEnum = pgEnum('position', ['Outside Hitter', 'Middle Blocker', 'Setter', 'Libero', 'Opposite Hitter', 'Defensive Specialist']);
+
 // Define tournament status enum
 export const tournamentStatusEnum = pgEnum('tournament_status', ['open', 'closed']);
 
@@ -20,7 +23,7 @@ export const users = pgTable('users', {
   username: varchar('username', { length: 100 }).notNull().unique(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
-  role: roleEnum('role').notNull().default('user'),
+  role: varchar('role', { length: 50 }).notNull().default('user'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -52,6 +55,43 @@ export const teams = pgTable('teams', {
   gender: genderEnum('gender').notNull(),
   tournamentId: uuid('tournament_id').notNull().references(() => tournaments.id, { onDelete: 'cascade' }),
   logo: varchar('logo', { length: 500 }), // Cloudinary URL
+  token: varchar('token', { length: 8 }).notNull().unique(), // 8-character token for public access
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Registrations table for team tournament registrations (existing table)
+export const registrations = pgTable('registrations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tournamentId: uuid('tournament_id').notNull().references(() => tournaments.id, { onDelete: 'cascade' }),
+  teamId: uuid('team_id').notNull().references(() => teams.id, { onDelete: 'cascade' }),
+  status: varchar('status', { length: 50 }).notNull().default('pending'),
+  registrationDate: timestamp('registration_date').defaultNow().notNull(),
+  paymentStatus: varchar('payment_status', { length: 50 }).notNull().default('unpaid'),
+  paymentDate: timestamp('payment_date'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Players table for team member registration
+export const players = pgTable('players', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  teamId: uuid('team_id').notNull().references(() => teams.id, { onDelete: 'cascade' }),
+  namaLengkap: varchar('nama_lengkap', { length: 255 }).notNull(),
+  namaJersey: varchar('nama_jersey', { length: 100 }),
+  noJersey: integer('no_jersey').notNull(),
+  position: positionEnum('position').notNull(),
+  gender: genderEnum('gender').notNull(),
+  tempatLahir: varchar('tempat_lahir', { length: 255 }).notNull(),
+  tanggalLahir: timestamp('tanggal_lahir').notNull(),
+  tinggi: integer('tinggi'), // in cm
+  berat: integer('berat'), // in kg
+  nik: varchar('nik', { length: 16 }).unique(),
+  nisn: varchar('nisn', { length: 10 }).unique(),
+  sekolah: varchar('sekolah', { length: 255 }).notNull(),
+  kotaSekolahAsal: varchar('kota_sekolah_asal', { length: 255 }).notNull(),
+  fotoAtlet: varchar('foto_atlet', { length: 500 }), // Cloudinary URL
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -60,12 +100,33 @@ export const teams = pgTable('teams', {
 // Define relationships
 export const tournamentsRelations = relations(tournaments, ({ many }) => ({
   teams: many(teams),
+  registrations: many(registrations),
 }));
 
-export const teamsRelations = relations(teams, ({ one }) => ({
+export const teamsRelations = relations(teams, ({ one, many }) => ({
   tournament: one(tournaments, {
     fields: [teams.tournamentId],
     references: [tournaments.id],
+  }),
+  players: many(players),
+  registrations: many(registrations),
+}));
+
+export const registrationsRelations = relations(registrations, ({ one }) => ({
+  tournament: one(tournaments, {
+    fields: [registrations.tournamentId],
+    references: [tournaments.id],
+  }),
+  team: one(teams, {
+    fields: [registrations.teamId],
+    references: [teams.id],
+  }),
+}));
+
+export const playersRelations = relations(players, ({ one }) => ({
+  team: one(teams, {
+    fields: [players.teamId],
+    references: [teams.id],
   }),
 }));
 
@@ -78,3 +139,9 @@ export type NewTournament = typeof tournaments.$inferInsert;
 
 export type Team = typeof teams.$inferSelect;
 export type NewTeam = typeof teams.$inferInsert;
+
+export type Player = typeof players.$inferSelect;
+export type NewPlayer = typeof players.$inferInsert;
+
+export type Registration = typeof registrations.$inferSelect;
+export type NewRegistration = typeof registrations.$inferInsert;

@@ -17,9 +17,10 @@ const updateUserSchema = z.object({
 // GET /api/users/[id] - Get user by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const currentUser = await getCurrentUser();
 
     if (!currentUser || currentUser.role !== 'administrator') {
@@ -37,7 +38,7 @@ export async function GET(
         updatedAt: users.updatedAt,
       })
       .from(users)
-      .where(eq(users.id, params.id))
+      .where(eq(users.id, id))
       .limit(1);
 
     if (!user) {
@@ -54,9 +55,10 @@ export async function GET(
 // PUT /api/users/[id] - Update user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const currentUser = await getCurrentUser();
 
     if (!currentUser || currentUser.role !== 'administrator') {
@@ -70,7 +72,7 @@ export async function PUT(
     const [existingUser] = await db
       .select()
       .from(users)
-      .where(eq(users.id, params.id))
+      .where(eq(users.id, id))
       .limit(1);
 
     if (!existingUser) {
@@ -120,7 +122,7 @@ export async function PUT(
     const [updatedUser] = await db
       .update(users)
       .set(updateData)
-      .where(eq(users.id, params.id))
+      .where(eq(users.id, id))
       .returning({
         id: users.id,
         name: users.name,
@@ -145,9 +147,10 @@ export async function PUT(
 // DELETE /api/users/[id] - Delete user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const currentUser = await getCurrentUser();
 
     if (!currentUser || currentUser.role !== 'administrator') {
@@ -155,7 +158,7 @@ export async function DELETE(
     }
 
     // Prevent self-deletion
-    if (currentUser.id === params.id) {
+    if (currentUser.id === id) {
       return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
     }
 
@@ -163,7 +166,7 @@ export async function DELETE(
     const [existingUser] = await db
       .select()
       .from(users)
-      .where(eq(users.id, params.id))
+      .where(eq(users.id, id))
       .limit(1);
 
     if (!existingUser) {
@@ -171,7 +174,7 @@ export async function DELETE(
     }
 
     // Delete user
-    await db.delete(users).where(eq(users.id, params.id));
+    await db.delete(users).where(eq(users.id, id));
 
     return NextResponse.json({ message: 'User deleted successfully' });
   } catch (error) {

@@ -14,10 +14,10 @@ const teamUpdateSchema = z.object({
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ teamId: string }> }
 ) {
   try {
-    const teamId = params.id;
+    const { teamId } = await params;
     const formData = await request.formData();
 
     const name = formData.get('name') as string;
@@ -130,10 +130,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ teamId: string }> }
 ) {
   try {
-    const teamId = params.id;
+    const { teamId } = await params;
 
     // Check if team exists
     const existingTeam = await db
