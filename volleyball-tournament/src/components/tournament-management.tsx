@@ -76,10 +76,10 @@ export function TournamentManagement() {
 
   const handleDeleteTournament = (tournamentId: string, tournamentName: string) => {
     showConfirmToast({
-      title: 'Delete Tournament',
-      description: `Are you sure you want to delete "${tournamentName}"? This action cannot be undone.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
+      title: 'Hapus Turnamen',
+      description: `Apakah Anda yakin ingin menghapus "${tournamentName}"? Tindakan ini tidak dapat dibatalkan.`,
+      confirmText: 'Hapus',
+      cancelText: 'Batal',
       variant: 'destructive',
       onConfirm: async () => {
         try {
@@ -89,14 +89,14 @@ export function TournamentManagement() {
 
           if (response.ok) {
             setTournaments(tournaments.filter(tournament => tournament.id !== tournamentId));
-            toast.success('Tournament deleted successfully');
+            toast.success('Turnamen berhasil dihapus');
           } else {
             const error = await response.json();
-            toast.error(`Failed to delete tournament: ${error.error}`);
+            toast.error(`Gagal menghapus turnamen: ${error.error}`);
           }
         } catch (error) {
           console.error('Error deleting tournament:', error);
-          toast.error('Failed to delete tournament');
+          toast.error('Gagal menghapus turnamen');
         }
       }
     });
@@ -146,7 +146,7 @@ export function TournamentManagement() {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <div className="text-muted-foreground">Loading tournaments...</div>
+          <div className="text-muted-foreground">Memuat turnamen...</div>
         </CardContent>
       </Card>
     );
@@ -156,22 +156,22 @@ export function TournamentManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Tournament Management</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Kelola Turnamen</h2>
           <p className="text-muted-foreground">
-            Create and manage volleyball tournaments
+            Buat dan kelola turnamen bola voli
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={handleCreateTournament}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Tournament
+              Tambah Turnamen
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-[50vw] w-[50vw] max-h-[90vh] overflow-y-auto" style={{ width: '50vw', maxWidth: '50vw' }}>
             <DialogHeader>
               <DialogTitle>
-                {dialogMode === 'create' ? 'Create New Tournament' : 'Edit Tournament'}
+                {dialogMode === 'create' ? 'Buat Turnamen Baru' : 'Edit Turnamen'}
               </DialogTitle>
             </DialogHeader>
             <TournamentForm
@@ -188,27 +188,27 @@ export function TournamentManagement() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5" />
-            Tournaments ({tournaments.length})
+            Turnamen ({tournaments.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {tournaments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No tournaments found. Create your first tournament to get started.
+              Tidak ada turnamen ditemukan. Buat turnamen pertama Anda untuk memulai.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Tournament</TableHead>
-                    <TableHead>Category</TableHead>
+                    <TableHead>Turnamen</TableHead>
+                    <TableHead>Kategori</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Dates</TableHead>
-                    <TableHead>Pools</TableHead>
-                    <TableHead>Max Players</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>Lokasi</TableHead>
+                    <TableHead>Tanggal</TableHead>
+                    <TableHead>Pool</TableHead>
+                    <TableHead>Maks Pemain</TableHead>
+                    <TableHead className="text-center">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -260,7 +260,7 @@ export function TournamentManagement() {
                             <div>Putri: {tournament.poolsPutri}</div>
                           )}
                           {tournament.poolsPutra === 0 && tournament.poolsPutri === 0 && (
-                            <div className="text-muted-foreground">No pools</div>
+                            <div className="text-muted-foreground">Tidak ada pool</div>
                           )}
                         </div>
                       </TableCell>
@@ -270,7 +270,7 @@ export function TournamentManagement() {
                           <span className="text-sm">{tournament.maxPlayersPerTeam}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -281,7 +281,7 @@ export function TournamentManagement() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEditTournament(tournament)}>
                               <Edit className="h-4 w-4 mr-2" />
-                              Edit Tournament
+                              Edit Turnamen
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -289,7 +289,7 @@ export function TournamentManagement() {
                               onClick={() => handleDeleteTournament(tournament.id, tournament.name)}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Tournament
+                              Hapus Turnamen
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

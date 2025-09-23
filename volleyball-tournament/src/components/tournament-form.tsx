@@ -93,60 +93,60 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Tournament name is required';
+      newErrors.name = 'Nama turnamen wajib diisi';
     }
 
     if (!formData.category) {
-      newErrors.category = 'Category is required';
+      newErrors.category = 'Kategori wajib dipilih';
     }
 
     if (!formData.location.trim()) {
-      newErrors.location = 'Location is required';
+      newErrors.location = 'Lokasi wajib diisi';
     }
 
     if (!formData.startDate) {
-      newErrors.startDate = 'Start date is required';
+      newErrors.startDate = 'Tanggal mulai wajib diisi';
     }
 
     if (!formData.endDate) {
-      newErrors.endDate = 'End date is required';
+      newErrors.endDate = 'Tanggal selesai wajib diisi';
     }
 
     if (!formData.registrationDeadline) {
-      newErrors.registrationDeadline = 'Registration deadline is required';
+      newErrors.registrationDeadline = 'Batas pendaftaran wajib diisi';
     }
 
     if (formData.startDate && formData.endDate && new Date(formData.startDate) >= new Date(formData.endDate)) {
-      newErrors.endDate = 'End date must be after start date';
+      newErrors.endDate = 'Tanggal selesai harus setelah tanggal mulai';
     }
 
     if (formData.registrationDeadline && formData.startDate && new Date(formData.registrationDeadline) >= new Date(formData.startDate)) {
-      newErrors.registrationDeadline = 'Registration deadline must be before start date';
+      newErrors.registrationDeadline = 'Batas pendaftaran harus sebelum tanggal mulai';
     }
 
     if (formData.maxPlayersPerTeam < 1) {
-      newErrors.maxPlayersPerTeam = 'Max players per team must be at least 1';
+      newErrors.maxPlayersPerTeam = 'Maksimal pemain per tim minimal 1';
     }
 
     if (formData.poolsPutra < 0) {
-      newErrors.poolsPutra = 'Number of pools cannot be negative';
+      newErrors.poolsPutra = 'Jumlah pool tidak boleh negatif';
     }
 
     if (formData.poolsPutri < 0) {
-      newErrors.poolsPutri = 'Number of pools cannot be negative';
+      newErrors.poolsPutri = 'Jumlah pool tidak boleh negatif';
     }
 
     // Validate pools based on category
     if (formData.category === 'putra' && formData.poolsPutra === 0) {
-      newErrors.poolsPutra = 'Putra category requires at least 1 pool';
+      newErrors.poolsPutra = 'Kategori putra memerlukan minimal 1 pool';
     }
 
     if (formData.category === 'putri' && formData.poolsPutri === 0) {
-      newErrors.poolsPutri = 'Putri category requires at least 1 pool';
+      newErrors.poolsPutri = 'Kategori putri memerlukan minimal 1 pool';
     }
 
     if (formData.category === 'mixed' && formData.poolsPutra === 0 && formData.poolsPutri === 0) {
-      newErrors.poolsPutra = 'Mixed category requires at least 1 pool for putra or putri';
+      newErrors.poolsPutra = 'Kategori mixed memerlukan minimal 1 pool untuk putra atau putri';
     }
 
     setErrors(newErrors);
@@ -186,8 +186,8 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
         // Show success toast
         toast.success(
           mode === 'create'
-            ? 'Tournament created successfully!'
-            : 'Tournament updated successfully!'
+            ? 'Turnamen berhasil dibuat!'
+            : 'Turnamen berhasil diperbarui!'
         );
 
         onSaved();
@@ -213,7 +213,7 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
         // Show error toast
         const errorMessage = typeof error.error === 'string'
           ? error.error
-          : 'Failed to save tournament. Please check the form and try again.';
+          : 'Gagal menyimpan turnamen. Silakan periksa form dan coba lagi.';
         toast.error(errorMessage);
 
         if (typeof error.error === 'string') {
@@ -231,8 +231,8 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
       }
     } catch (error) {
       console.error('Error saving tournament:', error);
-      toast.error('Network error. Please check your connection and try again.');
-      setErrors({ general: 'Failed to save tournament' });
+      toast.error('Kesalahan jaringan. Silakan periksa koneksi Anda dan coba lagi.');
+      setErrors({ general: 'Gagal menyimpan turnamen' });
     } finally {
       setLoading(false);
     }
@@ -250,13 +250,13 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Tournament Name *</Label>
+              <Label htmlFor="name">Nama Turnamen *</Label>
               <Input
                 id="name"
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Enter tournament name"
+                placeholder="Masukkan nama turnamen"
               />
               {errors.name && (
                 <div className="text-sm text-destructive">{errors.name}</div>
@@ -264,13 +264,13 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="category">Kategori *</Label>
               <Select
                 value={formData.category || ''}
                 onValueChange={(value: 'putra' | 'putri' | 'mixed') => handleInputChange('category', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Pilih kategori" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="putra">Putra</SelectItem>
@@ -287,11 +287,11 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
               <Label htmlFor="status">Status</Label>
               <Select value={formData.status} onValueChange={(value: 'open' | 'closed') => handleInputChange('status', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Pilih status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="open">Open</SelectItem>
-                  <SelectItem value="closed">Closed</SelectItem>
+                  <SelectItem value="open">Buka</SelectItem>
+                  <SelectItem value="closed">Tutup</SelectItem>
                 </SelectContent>
               </Select>
               {errors.status && (
@@ -300,13 +300,13 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location">Location *</Label>
+              <Label htmlFor="location">Lokasi *</Label>
               <Input
                 id="location"
                 type="text"
                 value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="Enter tournament location"
+                placeholder="Masukkan lokasi turnamen"
               />
               {errors.location && (
                 <div className="text-sm text-destructive">{errors.location}</div>
@@ -315,12 +315,12 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Deskripsi</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Enter tournament description"
+              placeholder="Masukkan deskripsi turnamen"
               rows={3}
             />
             {errors.description && (
@@ -330,7 +330,7 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date *</Label>
+              <Label htmlFor="startDate">Tanggal Mulai *</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -343,7 +343,7 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date *</Label>
+              <Label htmlFor="endDate">Tanggal Selesai *</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -356,7 +356,7 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="registrationDeadline">Registration Deadline *</Label>
+              <Label htmlFor="registrationDeadline">Batas Pendaftaran *</Label>
               <Input
                 id="registrationDeadline"
                 type="date"
@@ -371,7 +371,7 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="maxPlayersPerTeam">Max Players per Team</Label>
+              <Label htmlFor="maxPlayersPerTeam">Maks Pemain per Tim</Label>
               <Input
                 id="maxPlayersPerTeam"
                 type="number"
@@ -385,7 +385,7 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="poolsPutra">Number of Pools (Putra)</Label>
+              <Label htmlFor="poolsPutra">Jumlah Pool (Putra)</Label>
               <Input
                 id="poolsPutra"
                 type="number"
@@ -399,7 +399,7 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="poolsPutri">Number of Pools (Putri)</Label>
+              <Label htmlFor="poolsPutri">Jumlah Pool (Putri)</Label>
               <Input
                 id="poolsPutri"
                 type="number"
@@ -415,15 +415,15 @@ export function TournamentForm({ tournament, mode, onSaved, onCancel }: Tourname
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              Batal
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {loading
-                ? 'Saving...'
+                ? 'Menyimpan...'
                 : mode === 'create'
-                  ? 'Create Tournament'
-                  : 'Update Tournament'
+                  ? 'Buat Turnamen'
+                  : 'Perbarui Turnamen'
               }
             </Button>
           </div>

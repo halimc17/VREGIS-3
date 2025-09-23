@@ -13,8 +13,8 @@ import { TypographyMuted } from "@/components/ui/typography"
 import { LoginFormData } from "@/types"
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(1, "Password is required"),
+  email: z.string().email("Format email tidak valid"),
+  password: z.string().min(1, "Password wajib diisi"),
 })
 
 export function LoginForm() {
@@ -46,7 +46,7 @@ export function LoginForm() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || "Login failed")
+        throw new Error(result.error || "Login gagal")
       }
 
       if (result.success) {
@@ -54,7 +54,7 @@ export function LoginForm() {
         router.refresh()
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan")
     } finally {
       setIsLoading(false)
     }
@@ -63,9 +63,9 @@ export function LoginForm() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="text-xl">🏐 Volleyball Tournament</CardTitle>
+        <CardTitle className="text-xl">🏐 Turnamen Bola Voli</CardTitle>
         <CardDescription>
-          Enter your credentials to access the admin panel
+          Masukkan kredensial Anda untuk mengakses panel admin
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -75,7 +75,7 @@ export function LoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="admin@example.com"
+              placeholder="admin@contoh.com"
               {...form.register("email")}
               required
             />
@@ -105,7 +105,7 @@ export function LoginForm() {
             </TypographyMuted>
           )}
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign in"}
+            {isLoading ? "Masuk..." : "Masuk"}
           </Button>
         </form>
       </CardContent>

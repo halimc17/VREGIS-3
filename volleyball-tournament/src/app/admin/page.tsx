@@ -22,26 +22,26 @@ const recentActivities = [
   {
     id: 1,
     type: "registration",
-    message: "Team Thunder registered for Summer Championship",
-    time: "2 hours ago",
+    message: "Tim Thunder mendaftar untuk Kejuaraan Musim Panas",
+    time: "2 jam yang lalu",
   },
   {
     id: 2,
     type: "tournament",
-    message: "New tournament 'Beach Volleyball Cup' created",
-    time: "4 hours ago",
+    message: "Turnamen baru 'Piala Voli Pantai' telah dibuat",
+    time: "4 jam yang lalu",
   },
   {
     id: 3,
     type: "registration",
-    message: "Team Lightning approved for Spring Tournament",
-    time: "6 hours ago",
+    message: "Tim Lightning disetujui untuk Turnamen Musim Semi",
+    time: "6 jam yang lalu",
   },
   {
     id: 4,
     type: "team",
-    message: "Team Spike registered successfully",
-    time: "1 day ago",
+    message: "Tim Spike berhasil mendaftar",
+    time: "1 hari yang lalu",
   },
 ]
 
@@ -50,53 +50,53 @@ function DashboardStats() {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Tournaments</CardTitle>
+          <CardTitle className="text-sm font-medium">Total Turnamen</CardTitle>
           <Trophy className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalTournaments}</div>
           <p className="text-xs text-muted-foreground">
             <Badge variant="secondary" className="text-xs">
-              {stats.activeTournaments} active
+              {stats.activeTournaments} aktif
             </Badge>
           </p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Registered Teams</CardTitle>
+          <CardTitle className="text-sm font-medium">Tim Terdaftar</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalTeams}</div>
           <p className="text-xs text-muted-foreground">
-            +3 from last month
+            +3 dari bulan lalu
           </p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Registrations</CardTitle>
+          <CardTitle className="text-sm font-medium">Total Pendaftaran</CardTitle>
           <ClipboardList className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalRegistrations}</div>
           <p className="text-xs text-muted-foreground">
             <Badge variant="outline" className="text-xs">
-              {stats.pendingRegistrations} pending
+              {stats.pendingRegistrations} menunggu
             </Badge>
           </p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Approved Registrations</CardTitle>
+          <CardTitle className="text-sm font-medium">Pendaftaran Disetujui</CardTitle>
           <Calendar className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.approvedRegistrations}</div>
           <p className="text-xs text-muted-foreground">
-            77% approval rate
+            77% tingkat persetujuan
           </p>
         </CardContent>
       </Card>
@@ -108,9 +108,9 @@ function RecentActivity() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
+        <CardTitle>Aktivitas Terbaru</CardTitle>
         <CardDescription>
-          Latest updates from the tournament management system
+          Pembaruan terbaru dari sistem pengelolaan turnamen
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -131,7 +131,7 @@ function RecentActivity() {
                 }
                 className="text-xs"
               >
-                {activity.type}
+                {activity.type === "registration" ? "pendaftaran" : activity.type === "tournament" ? "turnamen" : "tim"}
               </Badge>
             </div>
           ))}
@@ -147,11 +147,11 @@ export default function AdminDashboard() {
       <div>
         <TypographyH1>Dashboard</TypographyH1>
         <TypographyMuted>
-          Welcome to the volleyball tournament management system
+          Selamat datang di sistem pengelolaan turnamen bola voli
         </TypographyMuted>
       </div>
 
-      <Suspense fallback={<div>Loading stats...</div>}>
+      <Suspense fallback={<div>Memuat statistik...</div>}>
         <DashboardStats />
       </Suspense>
 
@@ -159,9 +159,9 @@ export default function AdminDashboard() {
         <RecentActivity />
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>Aksi Cepat</CardTitle>
             <CardDescription>
-              Common tasks and shortcuts
+              Tugas umum dan pintasan
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -171,21 +171,21 @@ export default function AdminDashboard() {
                 className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted text-sm"
               >
                 <Trophy className="h-4 w-4" />
-                Manage Tournaments
+                Kelola Turnamen
               </a>
               <a
                 href="/admin/registrations"
                 className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted text-sm"
               >
                 <ClipboardList className="h-4 w-4" />
-                Review Registrations
+                Tinjau Pendaftaran
               </a>
               <a
                 href="/admin/teams"
                 className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted text-sm"
               >
                 <Users className="h-4 w-4" />
-                View Teams
+                Lihat Tim
               </a>
             </div>
           </CardContent>
@@ -196,6 +196,6 @@ export default function AdminDashboard() {
 }
 
 export const metadata = {
-  title: "Admin Dashboard | Volleyball Tournament",
-  description: "Manage volleyball tournaments, teams, and registrations",
+  title: "Dashboard Admin | Turnamen Bola Voli",
+  description: "Kelola turnamen bola voli, tim, dan pendaftaran",
 }

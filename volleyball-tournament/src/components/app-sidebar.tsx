@@ -41,27 +41,27 @@ const items = [
     icon: Home,
   },
   {
-    title: "Tournaments",
+    title: "Turnamen",
     url: "/admin/tournaments",
     icon: Trophy,
   },
   {
-    title: "Teams",
+    title: "Tim",
     url: "/admin/teams",
     icon: Users,
   },
   {
-    title: "Registrations",
+    title: "Pendaftaran",
     url: "/admin/registrations",
     icon: ClipboardList,
   },
   {
-    title: "Calendar",
+    title: "Kalender",
     url: "/admin/calendar",
     icon: Calendar,
   },
   {
-    title: "Settings",
+    title: "Pengaturan",
     url: "/admin/settings",
     icon: Settings,
   },
@@ -90,14 +90,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             🏐
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">Volleyball Tournament</span>
-            <span className="truncate text-xs">Admin Panel</span>
+            <span className="truncate font-semibold">Turnamen Bola Voli</span>
+            <span className="truncate text-xs">Panel Admin</span>
           </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigasi</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -140,7 +140,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut />
-                  Log out
+                  Keluar
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

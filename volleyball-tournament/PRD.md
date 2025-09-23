@@ -55,6 +55,7 @@ UI Framework: shadcn/ui + Tailwind CSS v4
 Backend:      Next.js API Routes
 Database:     PostgreSQL (Neon)
 Auth:         JWT + HTTP-only Cookies
+File Storage: Cloudinary
 Deployment:   Vercel
 Build Tool:   Turbopack
 ```
@@ -88,6 +89,41 @@ Components:    40+ reusable UI components
 Icons:         Lucide React
 Typography:    Geist font family
 ```
+
+### File Upload & Media Management
+**Platform**: Cloudinary
+**Purpose**: Mengelola semua operasi upload file dalam aplikasi
+
+**Use Cases**:
+- Team logos upload
+- Player photos/ID photos
+- Tournament banners/posters
+- Document uploads (payment proof, certificates)
+- Profile pictures for admin users
+
+**Configuration**:
+```env
+# Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME="dvi5lhmyc"
+CLOUDINARY_API_KEY="385957998344647"
+CLOUDINARY_API_SECRET="Lf3NULT68RwbcYfx0kbw8oQH5zU"
+CLOUDINARY_URL="cloudinary://385957998344647:Lf3NULT68RwbcYfx0kbw8oQH5zU@dvi5lhmyc"
+```
+
+**Features**:
+- Automatic image optimization dan resize
+- Support multiple format (JPEG, PNG, PDF, etc.)
+- Cloud-based storage dengan CDN
+- Secure direct upload dari frontend
+- Transformation API untuk image processing
+- Upload progress tracking
+- File size limits dan validation
+
+**Implementation**:
+- Frontend: @cloudinary/react package
+- Backend: cloudinary Node.js SDK
+- Upload strategy: Direct upload to Cloudinary
+- Security: Signed upload dengan preset
 
 ---
 

@@ -14,17 +14,17 @@ export default function Home() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <TypographyH1 className="mb-4">
-            🏐 Volleyball Tournament
+            🏐 Turnamen Bola Voli
           </TypographyH1>
           <TypographyLead className="mb-8">
-            Join competitive volleyball tournaments and showcase your team's skills
+            Ikuti turnamen bola voli kompetitif dan tunjukkan kemampuan tim Anda
           </TypographyLead>
           <div className="flex gap-4 justify-center">
             <Button size="lg" asChild>
-              <a href="/register">Register Your Team</a>
+              <a href="/register">Daftar Tim Anda</a>
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <a href="/login">Admin Login</a>
+              <a href="/login">Login Admin</a>
             </Button>
           </div>
         </div>
@@ -33,9 +33,9 @@ export default function Home() {
           <Card>
             <CardHeader className="text-center">
               <Trophy className="w-12 h-12 mx-auto mb-4 text-yellow-500" />
-              <CardTitle>Competitive Tournaments</CardTitle>
+              <CardTitle>Turnamen Kompetitif</CardTitle>
               <CardDescription>
-                Join exciting volleyball competitions with teams from around the region
+                Ikuti kompetisi bola voli yang menarik dengan tim dari berbagai daerah
               </CardDescription>
             </CardHeader>
           </Card>
@@ -43,9 +43,9 @@ export default function Home() {
           <Card>
             <CardHeader className="text-center">
               <Users className="w-12 h-12 mx-auto mb-4 text-blue-500" />
-              <CardTitle>Team Registration</CardTitle>
+              <CardTitle>Pendaftaran Tim</CardTitle>
               <CardDescription>
-                Easy online registration process for teams of all skill levels
+                Proses pendaftaran online yang mudah untuk tim dengan berbagai tingkat kemampuan
               </CardDescription>
             </CardHeader>
           </Card>
@@ -53,9 +53,9 @@ export default function Home() {
           <Card>
             <CardHeader className="text-center">
               <Calendar className="w-12 h-12 mx-auto mb-4 text-green-500" />
-              <CardTitle>Event Management</CardTitle>
+              <CardTitle>Manajemen Acara</CardTitle>
               <CardDescription>
-                Professional tournament organization with comprehensive scheduling
+                Organisasi turnamen profesional dengan penjadwalan yang komprehensif
               </CardDescription>
             </CardHeader>
           </Card>
@@ -63,13 +63,13 @@ export default function Home() {
 
         <div className="text-center">
           <TypographyH2 className="mb-4 border-none">
-            Ready to Compete?
+            Siap Berkompetisi?
           </TypographyH2>
           <TypographyMuted className="mb-6">
-            Register your team today and be part of the volleyball community
+            Daftar tim Anda hari ini dan jadilah bagian dari komunitas bola voli
           </TypographyMuted>
           <Button size="lg" asChild>
-            <a href="/register">Get Started</a>
+            <a href="/register">Mulai Sekarang</a>
           </Button>
         </div>
       </div>
