@@ -31,6 +31,9 @@ interface Tournament {
   maxPlayersPerTeam: number;
   poolsPutra: number;
   poolsPutri: number;
+  teamCount: number;
+  putraTeams: number;
+  putriTeams: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,7 +54,7 @@ export function TournamentManagement() {
       const response = await fetch('/api/tournaments');
       if (response.ok) {
         const data = await response.json();
-        setTournaments(data);
+        setTournaments(data.tournaments || []);
       } else {
         console.error('Failed to fetch tournaments');
       }
@@ -208,6 +211,7 @@ export function TournamentManagement() {
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Pool</TableHead>
                     <TableHead>Maks Pemain</TableHead>
+                    <TableHead>Tim Terdaftar</TableHead>
                     <TableHead className="text-center">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -268,6 +272,24 @@ export function TournamentManagement() {
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">{tournament.maxPlayersPerTeam}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm space-y-1">
+                          <div className="flex items-center gap-1">
+                            <Trophy className="h-3 w-3 text-muted-foreground" />
+                            <span className="font-medium">Total: {tournament.teamCount || 0}</span>
+                          </div>
+                          {tournament.category === 'mixed' ? (
+                            <div className="space-y-0.5">
+                              <div className="text-xs">Putra: {tournament.putraTeams || 0}</div>
+                              <div className="text-xs">Putri: {tournament.putriTeams || 0}</div>
+                            </div>
+                          ) : (
+                            <div className="text-xs text-muted-foreground">
+                              {tournament.category === 'putra' ? 'Putra' : 'Putri'}: {tournament.teamCount || 0}
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-center">

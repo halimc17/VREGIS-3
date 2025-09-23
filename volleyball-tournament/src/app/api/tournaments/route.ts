@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/connection';
-import { tournaments } from '@/lib/db/schema';
+import { tournaments, teams } from '@/lib/db/schema';
 import { getCurrentUser } from '@/lib/auth';
 import { z } from 'zod';
+import { count, eq } from 'drizzle-orm';
 
 const tournamentSchema = z.object({
   name: z.string().min(1, 'Tournament name is required'),
@@ -32,9 +33,38 @@ export async function GET() {
 
     const allTournaments = await db.select().from(tournaments).orderBy(tournaments.createdAt);
 
+    // Get team counts for each tournament
+    const tournamentsWithTeamCount = await Promise.all(
+      allTournaments.map(async (tournament) => {
+        const teamCount = await db
+          .select({ count: count() })
+          .from(teams)
+          .where(eq(teams.tournamentId, tournament.id));
+
+        const teamsByGender = await db
+          .select({
+            gender: teams.gender,
+            count: count()
+          })
+          .from(teams)
+          .where(eq(teams.tournamentId, tournament.id))
+          .groupBy(teams.gender);
+
+        const putraCount = teamsByGender.find(g => g.gender === 'putra')?.count || 0;
+        const putriCount = teamsByGender.find(g => g.gender === 'putri')?.count || 0;
+
+        return {
+          ...tournament,
+          teamCount: teamCount[0]?.count || 0,
+          putraTeams: putraCount,
+          putriTeams: putriCount
+        };
+      })
+    );
+
     return NextResponse.json({
       success: true,
-      tournaments: allTournaments
+      tournaments: tournamentsWithTeamCount
     });
 
   } catch (error) {
