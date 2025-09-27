@@ -156,9 +156,6 @@ export default function EditTeamDialog({ open, onOpenChange, team, tournaments, 
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit tim</DialogTitle>
-          <DialogDescription>
-            Perbarui detail tim {team.name}.
-          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -173,47 +170,49 @@ export default function EditTeamDialog({ open, onOpenChange, team, tournaments, 
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="gender">Gender</Label>
-            <Select
-              value={formData.gender}
-              onValueChange={(value) => handleInputChange('gender', value)}
-              disabled={loading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="putra">Putra</SelectItem>
-                <SelectItem value="putri">Putri</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gender</Label>
+              <Select
+                value={formData.gender}
+                onValueChange={(value) => handleInputChange('gender', value)}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="putra">Putra</SelectItem>
+                  <SelectItem value="putri">Putri</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="tournament">Tournament</Label>
-            <Select
-              value={formData.tournamentId}
-              onValueChange={(value) => handleInputChange('tournamentId', value)}
-              disabled={loading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih tournament" />
-              </SelectTrigger>
-              <SelectContent>
-                {tournaments.filter(tournament => tournament.status === 'open').length === 0 ? (
-                  <SelectItem value="" disabled>
-                    Tidak ada tournament tersedia
-                  </SelectItem>
-                ) : (
-                  tournaments.filter(tournament => tournament.status === 'open').map((tournament) => (
-                    <SelectItem key={tournament.id} value={tournament.id}>
-                      {tournament.name} ({tournament.category})
+            <div className="space-y-2">
+              <Label htmlFor="tournament">Tournament</Label>
+              <Select
+                value={formData.tournamentId}
+                onValueChange={(value) => handleInputChange('tournamentId', value)}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih tournament" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tournaments.filter(tournament => tournament.status === 'open').length === 0 ? (
+                    <SelectItem value="" disabled>
+                      Tidak ada tournament tersedia
                     </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+                  ) : (
+                    tournaments.filter(tournament => tournament.status === 'open').map((tournament) => (
+                      <SelectItem key={tournament.id} value={tournament.id}>
+                        {tournament.name} ({tournament.category})
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
