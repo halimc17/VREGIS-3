@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import DeletePlayerDialog from './delete-player-dialog';
 import OfficialFormDialog from './official-form-dialog';
 import DeleteOfficialDialog from './delete-official-dialog';
 import JerseyFormDialog from './jersey-form-dialog';
+import DeleteJerseyDialog from './delete-jersey-dialog';
 
 interface Player {
   id: string;
@@ -82,6 +83,7 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
   const [deletingOfficial, setDeletingOfficial] = useState<Official | null>(null);
   const [showJerseyForm, setShowJerseyForm] = useState(false);
   const [editingJersey, setEditingJersey] = useState<TeamJersey | null>(null);
+  const [deletingJersey, setDeletingJersey] = useState<TeamJersey | null>(null);
 
   const refreshPlayers = async () => {
     try {
@@ -165,6 +167,41 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
     refreshJerseys();
     setEditingJersey(null);
     toast.success('Data jersey berhasil diperbarui!');
+  };
+
+  const handleJerseyDeleted = () => {
+    refreshJerseys();
+    setDeletingJersey(null);
+    toast.success('Data jersey berhasil dihapus!');
+  };
+
+  const handleDeleteJerseyColor = async (jerseyId: string, colorField: 'warnaJersey1' | 'warnaJersey2' | 'warnaJersey3') => {
+    try {
+      const colorNames = {
+        warnaJersey1: 'Jersey Utama',
+        warnaJersey2: 'Jersey Kedua',
+        warnaJersey3: 'Jersey Ketiga'
+      };
+
+      const response = await fetch(`/api/public/teams/${team.token}/jerseys/${jerseyId}/color`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ colorField }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Gagal menghapus warna jersey');
+      }
+
+      toast.success(`${colorNames[colorField]} berhasil dihapus!`);
+      refreshJerseys();
+    } catch (error) {
+      console.error('Error deleting jersey color:', error);
+      toast.error(error instanceof Error ? error.message : 'Gagal menghapus warna jersey');
+    }
   };
 
   const getPositionColor = (position: string) => {
@@ -523,61 +560,90 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
                       <TableRow>
                         <TableHead className="w-[100px]">Jersey</TableHead>
                         <TableHead>Warna</TableHead>
+                        <TableHead className="w-[100px] text-center">Aksi</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {team.jerseys.map((jersey) => (
-                        <>
-                          {jersey.warnaJersey1 && (
-                            <TableRow key={`${jersey.id}-1`}>
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-xs font-bold">
-                                    1
-                                  </div>
-                                  <span className="font-medium">Jersey Utama</span>
+                      {team.jerseys.map((jersey, index) => [
+                        jersey.warnaJersey1 && (
+                          <TableRow key={`${jersey.id}-1`}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                                  1
                                 </div>
-                              </TableCell>
-                              <TableCell className="font-medium">{jersey.warnaJersey1}</TableCell>
-                            </TableRow>
-                          )}
-                          {jersey.warnaJersey2 && (
-                            <TableRow key={`${jersey.id}-2`}>
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-secondary-foreground text-xs font-bold">
-                                    2
-                                  </div>
-                                  <span className="font-medium">Jersey Kedua</span>
+                                <span className="font-medium">Jersey Utama</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">{jersey.warnaJersey1}</TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => handleDeleteJerseyColor(jersey.id, 'warnaJersey1')}
+                              >
+                                Hapus
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ),
+                        jersey.warnaJersey2 && (
+                          <TableRow key={`${jersey.id}-2`}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-secondary-foreground text-xs font-bold">
+                                  2
                                 </div>
-                              </TableCell>
-                              <TableCell className="font-medium">{jersey.warnaJersey2}</TableCell>
-                            </TableRow>
-                          )}
-                          {jersey.warnaJersey3 && (
-                            <TableRow key={`${jersey.id}-3`}>
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-muted text-muted-foreground text-xs font-bold">
-                                    3
-                                  </div>
-                                  <span className="font-medium">Jersey Ketiga</span>
+                                <span className="font-medium">Jersey Kedua</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">{jersey.warnaJersey2}</TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => handleDeleteJerseyColor(jersey.id, 'warnaJersey2')}
+                              >
+                                Hapus
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ),
+                        jersey.warnaJersey3 && (
+                          <TableRow key={`${jersey.id}-3`}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-muted text-muted-foreground text-xs font-bold">
+                                  3
                                 </div>
-                              </TableCell>
-                              <TableCell className="font-medium">{jersey.warnaJersey3}</TableCell>
-                            </TableRow>
-                          )}
-                          {!jersey.warnaJersey1 && !jersey.warnaJersey2 && !jersey.warnaJersey3 && (
-                            <TableRow key={`${jersey.id}-empty`}>
-                              <TableCell colSpan={2} className="text-center py-8">
-                                <TypographyMuted className="!text-sm italic">
-                                  Belum ada data jersey yang diisi
-                                </TypographyMuted>
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </>
-                      ))}
+                                <span className="font-medium">Jersey Ketiga</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">{jersey.warnaJersey3}</TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => handleDeleteJerseyColor(jersey.id, 'warnaJersey3')}
+                              >
+                                Hapus
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ),
+                        !jersey.warnaJersey1 && !jersey.warnaJersey2 && !jersey.warnaJersey3 && (
+                          <TableRow key={`${jersey.id}-empty`}>
+                            <TableCell colSpan={3} className="text-center py-8">
+                              <TypographyMuted className="!text-sm italic">
+                                Belum ada data jersey yang diisi
+                              </TypographyMuted>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      ].filter(Boolean))}
                     </TableBody>
                   </Table>
                 )}
@@ -668,6 +734,14 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
         teamToken={team.token}
         jersey={editingJersey}
         onJerseyUpdated={handleJerseyUpdated}
+      />
+
+      <DeleteJerseyDialog
+        open={!!deletingJersey}
+        onOpenChange={(open) => !open && setDeletingJersey(null)}
+        jersey={deletingJersey}
+        teamToken={team.token}
+        onJerseyDeleted={handleJerseyDeleted}
       />
     </div>
   );
