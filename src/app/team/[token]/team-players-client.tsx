@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Fragment } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,16 @@ import OfficialFormDialog from './official-form-dialog';
 import DeleteOfficialDialog from './delete-official-dialog';
 import JerseyFormDialog from './jersey-form-dialog';
 import DeleteJerseyDialog from './delete-jersey-dialog';
+import DocumentUploadDialog from './document-upload-dialog';
+
+interface Document {
+  id: string;
+  documentType: string;
+  customDocumentType: string | null;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: Date;
+}
 
 interface Player {
   id: string;
@@ -32,6 +42,7 @@ interface Player {
   sekolah: string;
   kotaSekolahAsal: string;
   fotoAtlet: string | null;
+  documents?: Document[];
   createdAt: Date;
 }
 
@@ -84,13 +95,30 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
   const [showJerseyForm, setShowJerseyForm] = useState(false);
   const [editingJersey, setEditingJersey] = useState<TeamJersey | null>(null);
   const [deletingJersey, setDeletingJersey] = useState<TeamJersey | null>(null);
+  const [uploadingDocumentPlayer, setUploadingDocumentPlayer] = useState<Player | null>(null);
 
   const refreshPlayers = async () => {
     try {
       const response = await fetch(`/api/public/teams/${team.token}/players`);
       if (response.ok) {
         const data = await response.json();
-        setTeam(prev => ({ ...prev, players: data.players }));
+        // Fetch documents for each player
+        const playersWithDocuments = await Promise.all(
+          data.players.map(async (player: Player) => {
+            try {
+              const docResponse = await fetch(`/api/public/teams/${team.token}/players/${player.id}/documents`);
+              if (docResponse.ok) {
+                const docData = await docResponse.json();
+                return { ...player, documents: docData.documents };
+              }
+              return { ...player, documents: [] };
+            } catch (error) {
+              console.error('Failed to fetch documents for player:', player.id, error);
+              return { ...player, documents: [] };
+            }
+          })
+        );
+        setTeam(prev => ({ ...prev, players: playersWithDocuments }));
       }
     } catch (error) {
       console.error('Failed to refresh players:', error);
@@ -175,6 +203,12 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
     toast.success('Data jersey berhasil dihapus!');
   };
 
+  const handleDocumentUploaded = () => {
+    refreshPlayers(); // Refresh to load new documents
+    setUploadingDocumentPlayer(null);
+    toast.success('Dokumen berhasil diunggah!');
+  };
+
   const handleDeleteJerseyColor = async (jerseyId: string, colorField: 'warnaJersey1' | 'warnaJersey2' | 'warnaJersey3') => {
     try {
       const colorNames = {
@@ -224,6 +258,18 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
       'Assistant Coach 2': 'bg-pink-100 text-pink-800',
     };
     return colors[position] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getDocumentTypeColor = (documentType: string) => {
+    const colors: { [key: string]: string } = {
+      'Akte Kelahiran': 'bg-blue-100 text-blue-800 border-blue-200',
+      'Ijasah/Raport': 'bg-green-100 text-green-800 border-green-200',
+      'NISN': 'bg-purple-100 text-purple-800 border-purple-200',
+      'Kartu Keluarga': 'bg-orange-100 text-orange-800 border-orange-200',
+      'KTP/SIM': 'bg-red-100 text-red-800 border-red-200',
+      'Lainnya': 'bg-gray-100 text-gray-800 border-gray-200',
+    };
+    return colors[documentType] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   return (
@@ -329,6 +375,7 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
                       <TableHead>Posisi</TableHead>
                       <TableHead className="w-[120px]">Tinggi/Berat</TableHead>
                       <TableHead>Sekolah</TableHead>
+                      <TableHead className="w-[150px]">Dokumen</TableHead>
                       <TableHead className="w-[70px] text-center">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -379,6 +426,23 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
                             </div>
                           </div>
                         </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {player.documents && player.documents.length > 0 ? (
+                              player.documents.map((doc) => (
+                                <Badge
+                                  key={doc.id}
+                                  variant="outline"
+                                  className={`text-xs px-2 py-1 ${getDocumentTypeColor(doc.documentType)}`}
+                                >
+                                  {doc.documentType === 'Lainnya' ? doc.customDocumentType : doc.documentType}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Belum ada dokumen</span>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-center">
                           <div className="flex flex-col gap-1 justify-center items-center">
                             <Button
@@ -401,7 +465,7 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
                               variant="secondary"
                               size="sm"
                               className="h-6 px-2 text-xs w-16"
-                              onClick={() => {/* TODO: Implement upload document functionality */}}
+                              onClick={() => setUploadingDocumentPlayer(player)}
                             >
                               Upload
                             </Button>
@@ -576,86 +640,88 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {team.jerseys.map((jersey, index) => [
-                        jersey.warnaJersey1 && (
-                          <TableRow key={`${jersey.id}-1`}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-xs font-bold">
-                                  1
+                      {team.jerseys.map((jersey, index) => (
+                        <Fragment key={jersey.id}>
+                          {jersey.warnaJersey1 && (
+                            <TableRow key={`${jersey.id}-1`}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                                    1
+                                  </div>
+                                  <span className="font-medium">Jersey Utama</span>
                                 </div>
-                                <span className="font-medium">Jersey Utama</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="font-medium">{jersey.warnaJersey1}</TableCell>
-                            <TableCell className="text-center">
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => handleDeleteJerseyColor(jersey.id, 'warnaJersey1')}
-                              >
-                                Hapus
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ),
-                        jersey.warnaJersey2 && (
-                          <TableRow key={`${jersey.id}-2`}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-secondary-foreground text-xs font-bold">
-                                  2
+                              </TableCell>
+                              <TableCell className="font-medium">{jersey.warnaJersey1}</TableCell>
+                              <TableCell className="text-center">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => handleDeleteJerseyColor(jersey.id, 'warnaJersey1')}
+                                >
+                                  Hapus
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                          {jersey.warnaJersey2 && (
+                            <TableRow key={`${jersey.id}-2`}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-secondary-foreground text-xs font-bold">
+                                    2
+                                  </div>
+                                  <span className="font-medium">Jersey Kedua</span>
                                 </div>
-                                <span className="font-medium">Jersey Kedua</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="font-medium">{jersey.warnaJersey2}</TableCell>
-                            <TableCell className="text-center">
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => handleDeleteJerseyColor(jersey.id, 'warnaJersey2')}
-                              >
-                                Hapus
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ),
-                        jersey.warnaJersey3 && (
-                          <TableRow key={`${jersey.id}-3`}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-muted text-muted-foreground text-xs font-bold">
-                                  3
+                              </TableCell>
+                              <TableCell className="font-medium">{jersey.warnaJersey2}</TableCell>
+                              <TableCell className="text-center">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => handleDeleteJerseyColor(jersey.id, 'warnaJersey2')}
+                                >
+                                  Hapus
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                          {jersey.warnaJersey3 && (
+                            <TableRow key={`${jersey.id}-3`}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-muted text-muted-foreground text-xs font-bold">
+                                    3
+                                  </div>
+                                  <span className="font-medium">Jersey Ketiga</span>
                                 </div>
-                                <span className="font-medium">Jersey Ketiga</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="font-medium">{jersey.warnaJersey3}</TableCell>
-                            <TableCell className="text-center">
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => handleDeleteJerseyColor(jersey.id, 'warnaJersey3')}
-                              >
-                                Hapus
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ),
-                        !jersey.warnaJersey1 && !jersey.warnaJersey2 && !jersey.warnaJersey3 && (
-                          <TableRow key={`${jersey.id}-empty`}>
-                            <TableCell colSpan={3} className="text-center py-8">
-                              <TypographyMuted className="!text-sm italic">
-                                Belum ada data jersey yang diisi
-                              </TypographyMuted>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      ].filter(Boolean))}
+                              </TableCell>
+                              <TableCell className="font-medium">{jersey.warnaJersey3}</TableCell>
+                              <TableCell className="text-center">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => handleDeleteJerseyColor(jersey.id, 'warnaJersey3')}
+                                >
+                                  Hapus
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                          {!jersey.warnaJersey1 && !jersey.warnaJersey2 && !jersey.warnaJersey3 && (
+                            <TableRow key={`${jersey.id}-empty`}>
+                              <TableCell colSpan={3} className="text-center py-8">
+                                <TypographyMuted className="!text-sm italic">
+                                  Belum ada data jersey yang diisi
+                                </TypographyMuted>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </Fragment>
+                      ))}
                     </TableBody>
                   </Table>
                 )}
@@ -755,6 +821,16 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
         teamToken={team.token}
         onJerseyDeleted={handleJerseyDeleted}
       />
+
+      {uploadingDocumentPlayer && (
+        <DocumentUploadDialog
+          open={!!uploadingDocumentPlayer}
+          onOpenChange={(open) => !open && setUploadingDocumentPlayer(null)}
+          player={uploadingDocumentPlayer}
+          teamToken={team.token}
+          onDocumentUploaded={handleDocumentUploaded}
+        />
+      )}
     </div>
   );
 }

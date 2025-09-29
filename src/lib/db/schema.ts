@@ -19,6 +19,9 @@ export const officialPositionEnum = pgEnum('official_position', ['Manager', 'Hea
 // Define tournament status enum
 export const tournamentStatusEnum = pgEnum('tournament_status', ['open', 'closed']);
 
+// Define document type enum
+export const documentTypeEnum = pgEnum('document_type', ['Akte Kelahiran', 'Ijasah/Raport', 'NISN', 'Kartu Keluarga', 'KTP/SIM', 'Lainnya']);
+
 // Users table for admin authentication
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -122,6 +125,21 @@ export const teamJerseys = pgTable('team_jerseys', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Documents table for player documents
+export const documents = pgTable('documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  playerId: uuid('player_id').notNull().references(() => players.id, { onDelete: 'cascade' }),
+  documentType: documentTypeEnum('document_type').notNull(),
+  customDocumentType: varchar('custom_document_type', { length: 255 }), // For "Lainnya" option
+  fileName: varchar('file_name', { length: 255 }).notNull(),
+  fileUrl: varchar('file_url', { length: 500 }).notNull(), // Cloudinary or other storage URL
+  fileSize: integer('file_size'), // in bytes
+  mimeType: varchar('mime_type', { length: 100 }),
+  uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 
 // Define relationships
 export const tournamentsRelations = relations(tournaments, ({ many }) => ({
@@ -151,11 +169,12 @@ export const registrationsRelations = relations(registrations, ({ one }) => ({
   }),
 }));
 
-export const playersRelations = relations(players, ({ one }) => ({
+export const playersRelations = relations(players, ({ one, many }) => ({
   team: one(teams, {
     fields: [players.teamId],
     references: [teams.id],
   }),
+  documents: many(documents),
 }));
 
 export const officialsRelations = relations(officials, ({ one }) => ({
@@ -169,6 +188,13 @@ export const teamJerseysRelations = relations(teamJerseys, ({ one }) => ({
   team: one(teams, {
     fields: [teamJerseys.teamId],
     references: [teams.id],
+  }),
+}));
+
+export const documentsRelations = relations(documents, ({ one }) => ({
+  player: one(players, {
+    fields: [documents.playerId],
+    references: [players.id],
   }),
 }));
 
@@ -193,3 +219,6 @@ export type NewRegistration = typeof registrations.$inferInsert;
 
 export type TeamJersey = typeof teamJerseys.$inferSelect;
 export type NewTeamJersey = typeof teamJerseys.$inferInsert;
+
+export type Document = typeof documents.$inferSelect;
+export type NewDocument = typeof documents.$inferInsert;
