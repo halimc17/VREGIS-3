@@ -335,15 +335,17 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
                   <TableBody>
                     {team.players.map((player) => (
                       <TableRow key={player.id}>
-                        <TableCell>
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={player.fotoAtlet || ''} alt={player.namaLengkap} />
-                            <AvatarFallback className="text-xs">
-                              {player.namaLengkap.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={player.fotoAtlet || ''} alt={player.namaLengkap} />
+                              <AvatarFallback className="text-xs">
+                                {player.namaLengkap.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-center">
                           <Badge variant="outline" className="font-mono">
                             #{player.noJersey}
                           </Badge>
@@ -457,13 +459,15 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
                     <TableBody>
                       {team.officials.map((official) => (
                         <TableRow key={official.id}>
-                          <TableCell>
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={official.fotoOfficial || ''} alt={official.namaLengkap} />
-                              <AvatarFallback className="text-xs">
-                                {official.namaLengkap.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
+                          <TableCell className="text-center">
+                            <div className="flex justify-center">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={official.fotoOfficial || ''} alt={official.namaLengkap} />
+                                <AvatarFallback className="text-xs">
+                                  {official.namaLengkap.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
