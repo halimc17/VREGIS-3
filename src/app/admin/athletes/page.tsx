@@ -463,7 +463,7 @@ export default function AthletesPage() {
 
       {/* Athlete Detail Modal */}
       <Dialog open={isModalOpen} onOpenChange={closeModal}>
-        <DialogContent className="w-[60vw] max-w-[60vw] max-h-[85vh] overflow-y-auto p-4" style={{ width: '60vw', maxWidth: '60vw' }}>
+        <DialogContent className="w-[40vw] max-w-[40vw] max-h-[85vh] overflow-y-auto p-4" style={{ width: '40vw', maxWidth: '40vw' }}>
           <DialogHeader className="pb-3">
             <DialogTitle className="text-xl font-bold">Detail Atlit</DialogTitle>
           </DialogHeader>

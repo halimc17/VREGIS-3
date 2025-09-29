@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TypographyH1, TypographyH3, TypographyMuted, TypographyLead } from '@/components/ui/typography';
-import { Plus, Users, UserCheck, MessageCircle, Shirt, Edit } from 'lucide-react';
+import { Plus, Users, UserCheck, MessageCircle, Shirt, Edit, Upload } from 'lucide-react';
 import PlayerFormDialog from './player-form-dialog';
 import DeletePlayerDialog from './delete-player-dialog';
 import OfficialFormDialog from './official-form-dialog';
@@ -337,9 +337,9 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
                       <TableRow key={player.id}>
                         <TableCell className="text-center">
                           <div className="flex justify-center">
-                            <Avatar className="h-10 w-10">
+                            <Avatar className="h-16 w-16">
                               <AvatarImage src={player.fotoAtlet || ''} alt={player.namaLengkap} />
-                              <AvatarFallback className="text-xs">
+                              <AvatarFallback className="text-sm">
                                 {player.namaLengkap.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
@@ -380,11 +380,11 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex gap-1 justify-center">
+                          <div className="flex flex-col gap-1 justify-center items-center">
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-6 px-2 text-xs"
+                              className="h-6 px-2 text-xs w-16"
                               onClick={() => setEditingPlayer(player)}
                             >
                               Edit
@@ -392,10 +392,18 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
                             <Button
                               variant="destructive"
                               size="sm"
-                              className="h-6 px-2 text-xs"
+                              className="h-6 px-2 text-xs w-16"
                               onClick={() => setDeletingPlayer(player)}
                             >
                               Hapus
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="h-6 px-2 text-xs w-16"
+                              onClick={() => {/* TODO: Implement upload document functionality */}}
+                            >
+                              Upload
                             </Button>
                           </div>
                         </TableCell>
