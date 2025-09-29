@@ -61,6 +61,9 @@ export default function AthletesPage() {
   const [teamFilter, setTeamFilter] = useState<string>("all")
   const [tournamentFilter, setTournamentFilter] = useState<string>("all")
   const [genderFilter, setGenderFilter] = useState<string>("all")
+  const [positionFilter, setPositionFilter] = useState<string>("all")
+  const [minAge, setMinAge] = useState<string>("")
+  const [maxAge, setMaxAge] = useState<string>("")
   const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -71,6 +74,9 @@ export default function AthletesPage() {
       if (teamFilter !== 'all') params.append('teamId', teamFilter)
       if (tournamentFilter !== 'all') params.append('tournamentId', tournamentFilter)
       if (genderFilter !== 'all') params.append('gender', genderFilter)
+      if (positionFilter !== 'all') params.append('position', positionFilter)
+      if (minAge) params.append('minAge', minAge)
+      if (maxAge) params.append('maxAge', maxAge)
 
       const response = await fetch(`/api/athletes?${params.toString()}`)
       const data = await response.json()
@@ -119,13 +125,16 @@ export default function AthletesPage() {
 
   useEffect(() => {
     fetchAthletes()
-  }, [searchQuery, teamFilter, tournamentFilter, genderFilter])
+  }, [searchQuery, teamFilter, tournamentFilter, genderFilter, positionFilter, minAge, maxAge])
 
   const clearFilters = () => {
     setSearchQuery("")
     setTeamFilter("all")
     setTournamentFilter("all")
     setGenderFilter("all")
+    setPositionFilter("all")
+    setMinAge("")
+    setMaxAge("")
   }
 
   // Filter teams based on selected gender
@@ -143,7 +152,7 @@ export default function AthletesPage() {
     }
   }, [genderFilter, teamFilter, filteredTeams])
 
-  const hasActiveFilters = searchQuery !== "" || teamFilter !== "all" || tournamentFilter !== "all" || genderFilter !== "all"
+  const hasActiveFilters = searchQuery !== "" || teamFilter !== "all" || tournamentFilter !== "all" || genderFilter !== "all" || positionFilter !== "all" || minAge !== "" || maxAge !== ""
 
   const handleRowClick = (athlete: Athlete) => {
     setSelectedAthlete(athlete)
@@ -202,7 +211,7 @@ export default function AthletesPage() {
                 Filter Atlit
               </CardTitle>
               <CardDescription>
-                Cari dan filter atlit berdasarkan nama, tim, turnamen, dan jenis kelamin
+                Cari dan filter atlit berdasarkan nama, tim, turnamen, jenis kelamin, posisi, dan umur
               </CardDescription>
             </div>
             {hasActiveFilters && (
@@ -224,48 +233,88 @@ export default function AthletesPage() {
                 className="pl-9"
               />
             </div>
-            <div className="flex -space-x-px">
-              <div className="flex-1">
-                <Select value={tournamentFilter} onValueChange={setTournamentFilter}>
-                  <SelectTrigger className="rounded-r-none border-r-0 focus:z-10">
-                    <SelectValue placeholder="Semua Turnamen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Turnamen</SelectItem>
-                    {tournaments.map((tournament) => (
-                      <SelectItem key={tournament.id} value={tournament.id}>
-                        {tournament.name} ({tournament.category})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Select value={tournamentFilter} onValueChange={setTournamentFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Semua Turnamen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Turnamen</SelectItem>
+                      {tournaments.map((tournament) => (
+                        <SelectItem key={tournament.id} value={tournament.id}>
+                          {tournament.name} ({tournament.category})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Select value={genderFilter} onValueChange={setGenderFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Semua Jenis Kelamin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Jenis Kelamin</SelectItem>
+                      <SelectItem value="putra">Putra</SelectItem>
+                      <SelectItem value="putri">Putri</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Select value={teamFilter} onValueChange={setTeamFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Semua Tim" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Tim</SelectItem>
+                      {filteredTeams.map((team) => (
+                        <SelectItem key={team.id} value={team.id}>
+                          {team.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex-1">
-                <Select value={genderFilter} onValueChange={setGenderFilter}>
-                  <SelectTrigger className="rounded-none border-x-0 focus:z-10">
-                    <SelectValue placeholder="Semua Jenis Kelamin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Jenis Kelamin</SelectItem>
-                    <SelectItem value="putra">Putra</SelectItem>
-                    <SelectItem value="putri">Putri</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex-1">
-                <Select value={teamFilter} onValueChange={setTeamFilter}>
-                  <SelectTrigger className="rounded-l-none border-l-0 focus:z-10">
-                    <SelectValue placeholder="Semua Tim" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Tim</SelectItem>
-                    {filteredTeams.map((team) => (
-                      <SelectItem key={team.id} value={team.id}>
-                        {team.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Select value={positionFilter} onValueChange={setPositionFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Semua Posisi" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Posisi</SelectItem>
+                      <SelectItem value="Outside Hitter">Outside Hitter</SelectItem>
+                      <SelectItem value="Middle Blocker">Middle Blocker</SelectItem>
+                      <SelectItem value="Setter">Setter</SelectItem>
+                      <SelectItem value="Libero">Libero</SelectItem>
+                      <SelectItem value="Opposite Hitter">Opposite Hitter</SelectItem>
+                      <SelectItem value="Defensive Specialist">Defensive Specialist</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Input
+                    type="number"
+                    placeholder="Min Umur"
+                    value={minAge}
+                    onChange={(e) => setMinAge(e.target.value)}
+                    min="1"
+                    max="99"
+                  />
+                </div>
+                <div>
+                  <Input
+                    type="number"
+                    placeholder="Max Umur"
+                    value={maxAge}
+                    onChange={(e) => setMaxAge(e.target.value)}
+                    min="1"
+                    max="99"
+                  />
+                </div>
               </div>
             </div>
           </div>

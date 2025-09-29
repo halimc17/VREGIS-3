@@ -11,6 +11,9 @@ export async function GET(request: NextRequest) {
     const teamId = searchParams.get('teamId');
     const tournamentId = searchParams.get('tournamentId');
     const gender = searchParams.get('gender');
+    const position = searchParams.get('position');
+    const minAge = searchParams.get('minAge');
+    const maxAge = searchParams.get('maxAge');
 
     let query = db
       .select({
@@ -67,6 +70,10 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(players.gender, gender as 'putra' | 'putri'));
     }
 
+    if (position && position !== 'all') {
+      conditions.push(eq(players.position, position));
+    }
+
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
@@ -80,9 +87,26 @@ export async function GET(request: NextRequest) {
       ageNumber: calculateAgeNumber(athlete.tanggalLahir),
     }));
 
+    // Apply age filters after age calculation
+    let filteredAthletes = athletesWithAge;
+
+    if (minAge) {
+      const minAgeNum = parseInt(minAge);
+      if (!isNaN(minAgeNum)) {
+        filteredAthletes = filteredAthletes.filter(athlete => athlete.ageNumber >= minAgeNum);
+      }
+    }
+
+    if (maxAge) {
+      const maxAgeNum = parseInt(maxAge);
+      if (!isNaN(maxAgeNum)) {
+        filteredAthletes = filteredAthletes.filter(athlete => athlete.ageNumber <= maxAgeNum);
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      athletes: athletesWithAge,
+      athletes: filteredAthletes,
     });
 
   } catch (error) {
