@@ -7,6 +7,7 @@ import {
   Home,
   Trophy,
   Users,
+  UserCheck,
   ClipboardList,
   Settings,
   LogOut,
@@ -49,6 +50,11 @@ const items = [
     title: "Tim",
     url: "/admin/teams",
     icon: Users,
+  },
+  {
+    title: "Atlit",
+    url: "/admin/athletes",
+    icon: UserCheck,
   },
   {
     title: "Pendaftaran",
