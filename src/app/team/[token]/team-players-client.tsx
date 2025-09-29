@@ -8,11 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TypographyH1, TypographyH3, TypographyMuted, TypographyLead } from '@/components/ui/typography';
-import { Plus, Users, UserCheck, MessageCircle } from 'lucide-react';
+import { Plus, Users, UserCheck, MessageCircle, Shirt, Edit } from 'lucide-react';
 import PlayerFormDialog from './player-form-dialog';
 import DeletePlayerDialog from './delete-player-dialog';
 import OfficialFormDialog from './official-form-dialog';
 import DeleteOfficialDialog from './delete-official-dialog';
+import JerseyFormDialog from './jersey-form-dialog';
 
 interface Player {
   id: string;
@@ -42,6 +43,14 @@ interface Official {
   createdAt: Date;
 }
 
+interface TeamJersey {
+  id: string;
+  warnaJersey1: string | null;
+  warnaJersey2: string | null;
+  warnaJersey3: string | null;
+  createdAt: Date;
+}
+
 interface Team {
   id: string;
   name: string;
@@ -56,6 +65,7 @@ interface Team {
   } | null;
   players: Player[];
   officials: Official[];
+  jerseys: TeamJersey[];
 }
 
 interface TeamPlayersClientProps {
@@ -70,6 +80,8 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
   const [showOfficialForm, setShowOfficialForm] = useState(false);
   const [editingOfficial, setEditingOfficial] = useState<Official | null>(null);
   const [deletingOfficial, setDeletingOfficial] = useState<Official | null>(null);
+  const [showJerseyForm, setShowJerseyForm] = useState(false);
+  const [editingJersey, setEditingJersey] = useState<TeamJersey | null>(null);
 
   const refreshPlayers = async () => {
     try {
@@ -92,6 +104,18 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
       }
     } catch (error) {
       console.error('Failed to refresh officials:', error);
+    }
+  };
+
+  const refreshJerseys = async () => {
+    try {
+      const response = await fetch(`/api/public/teams/${team.token}/jerseys`);
+      if (response.ok) {
+        const data = await response.json();
+        setTeam(prev => ({ ...prev, jerseys: data.jerseys }));
+      }
+    } catch (error) {
+      console.error('Failed to refresh jerseys:', error);
     }
   };
 
@@ -129,6 +153,18 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
     refreshOfficials();
     setDeletingOfficial(null);
     toast.success('Official berhasil dihapus dari tim!');
+  };
+
+  const handleJerseyAdded = () => {
+    refreshJerseys();
+    setShowJerseyForm(false);
+    toast.success('Data jersey berhasil ditambahkan!');
+  };
+
+  const handleJerseyUpdated = () => {
+    refreshJerseys();
+    setEditingJersey(null);
+    toast.success('Data jersey berhasil diperbarui!');
   };
 
   const getPositionColor = (position: string) => {
@@ -440,67 +476,110 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
             {/* Jersey Section */}
             <Card>
               <CardHeader>
-                <div className="flex flex-col space-y-3">
+                <div className="flex items-center justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                      <CardTitle>Daftar Jersey Tim</CardTitle>
+                      <CardTitle>Daftar Jersey</CardTitle>
                       <Badge variant="secondary" className="text-sm font-medium">
-                        {team.players.length} jersey
+                        {team.jerseys.length > 0 ? 'Terdaftar' : 'Belum ada'}
                       </Badge>
                     </div>
                     <CardDescription>
-                      Informasi nomor jersey dan nama jersey atlet
-                      {team.players.length === 0 && (
-                        <span className="text-muted-foreground block mt-1">
-                          • jersey akan muncul setelah menambahkan atlet
-                        </span>
-                      )}
+                      Kelola informasi warna jersey yang akan digunakan tim pada turnamen
                     </CardDescription>
                   </div>
+                  {team.jerseys.length === 0 ? (
+                    <Button onClick={() => setShowJerseyForm(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Tambah Jersey
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditingJersey(team.jerseys[0])}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Jersey
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
-                {team.players.length === 0 ? (
+                {team.jerseys.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                      <div className="h-6 w-6 text-muted-foreground font-bold">#</div>
+                      <Shirt className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <div className="mt-4 space-y-2">
                       <TypographyH3 className="!text-lg">Belum ada jersey</TypographyH3>
                       <TypographyMuted className="!text-sm">
-                        Jersey akan ditampilkan setelah menambahkan atlet.
+                        Tambahkan informasi warna jersey tim untuk turnamen.
                       </TypographyMuted>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {team.players
-                      .sort((a, b) => a.noJersey - b.noJersey)
-                      .map((player) => (
-                        <div key={player.id} className="flex items-center gap-3 p-3 rounded-lg border">
-                          <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary text-primary-foreground font-bold text-sm">
-                            #{player.noJersey}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <TypographyMuted className="!font-medium !text-sm !text-foreground truncate">{player.namaLengkap}</TypographyMuted>
-                            {player.namaJersey ? (
-                              <TypographyMuted className="!text-xs mt-1">
-                                Jersey: {player.namaJersey}
-                              </TypographyMuted>
-                            ) : (
-                              <TypographyMuted className="!text-xs mt-1 italic">
-                                Nama jersey belum diisi
-                              </TypographyMuted>
-                            )}
-                            <div className="mt-1">
-                              <Badge className={`${getPositionColor(player.position)} text-xs`}>
-                                {player.position}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[100px]">Jersey</TableHead>
+                        <TableHead>Warna</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {team.jerseys.map((jersey) => (
+                        <>
+                          {jersey.warnaJersey1 && (
+                            <TableRow key={`${jersey.id}-1`}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                                    1
+                                  </div>
+                                  <span className="font-medium">Jersey Utama</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium">{jersey.warnaJersey1}</TableCell>
+                            </TableRow>
+                          )}
+                          {jersey.warnaJersey2 && (
+                            <TableRow key={`${jersey.id}-2`}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-secondary-foreground text-xs font-bold">
+                                    2
+                                  </div>
+                                  <span className="font-medium">Jersey Kedua</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium">{jersey.warnaJersey2}</TableCell>
+                            </TableRow>
+                          )}
+                          {jersey.warnaJersey3 && (
+                            <TableRow key={`${jersey.id}-3`}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-muted text-muted-foreground text-xs font-bold">
+                                    3
+                                  </div>
+                                  <span className="font-medium">Jersey Ketiga</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium">{jersey.warnaJersey3}</TableCell>
+                            </TableRow>
+                          )}
+                          {!jersey.warnaJersey1 && !jersey.warnaJersey2 && !jersey.warnaJersey3 && (
+                            <TableRow key={`${jersey.id}-empty`}>
+                              <TableCell colSpan={2} className="text-center py-8">
+                                <TypographyMuted className="!text-sm italic">
+                                  Belum ada data jersey yang diisi
+                                </TypographyMuted>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
                       ))}
-                  </div>
+                    </TableBody>
+                  </Table>
                 )}
               </CardContent>
             </Card>
@@ -572,6 +651,23 @@ export default function TeamPlayersClient({ team: initialTeam }: TeamPlayersClie
         official={deletingOfficial}
         teamToken={team.token}
         onOfficialDeleted={handleOfficialDeleted}
+      />
+
+      <JerseyFormDialog
+        open={showJerseyForm}
+        onOpenChange={setShowJerseyForm}
+        teamId={team.id}
+        teamToken={team.token}
+        onJerseyAdded={handleJerseyAdded}
+      />
+
+      <JerseyFormDialog
+        open={!!editingJersey}
+        onOpenChange={(open) => !open && setEditingJersey(null)}
+        teamId={team.id}
+        teamToken={team.token}
+        jersey={editingJersey}
+        onJerseyUpdated={handleJerseyUpdated}
       />
     </div>
   );

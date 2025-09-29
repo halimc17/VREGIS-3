@@ -111,6 +111,17 @@ export const officials = pgTable('officials', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Team Jersey table for jersey information
+export const teamJerseys = pgTable('team_jerseys', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  teamId: uuid('team_id').notNull().references(() => teams.id, { onDelete: 'cascade' }),
+  warnaJersey1: varchar('warna_jersey_1', { length: 100 }), // Optional - jersey color 1
+  warnaJersey2: varchar('warna_jersey_2', { length: 100 }), // Optional - jersey color 2
+  warnaJersey3: varchar('warna_jersey_3', { length: 100 }), // Optional - jersey color 3
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 
 // Define relationships
 export const tournamentsRelations = relations(tournaments, ({ many }) => ({
@@ -126,6 +137,7 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
   players: many(players),
   officials: many(officials),
   registrations: many(registrations),
+  jerseys: many(teamJerseys),
 }));
 
 export const registrationsRelations = relations(registrations, ({ one }) => ({
@@ -153,6 +165,13 @@ export const officialsRelations = relations(officials, ({ one }) => ({
   }),
 }));
 
+export const teamJerseysRelations = relations(teamJerseys, ({ one }) => ({
+  team: one(teams, {
+    fields: [teamJerseys.teamId],
+    references: [teams.id],
+  }),
+}));
+
 // Types for use in the application
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -171,3 +190,6 @@ export type NewOfficial = typeof officials.$inferInsert;
 
 export type Registration = typeof registrations.$inferSelect;
 export type NewRegistration = typeof registrations.$inferInsert;
+
+export type TeamJersey = typeof teamJerseys.$inferSelect;
+export type NewTeamJersey = typeof teamJerseys.$inferInsert;

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db/connection';
-import { teams, players, tournaments, officials } from '@/lib/db/schema';
+import { teams, players, tournaments, officials, teamJerseys } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import TeamPlayersClient from './team-players-client';
 
@@ -46,10 +46,17 @@ async function getTeamByToken(token: string) {
     .from(officials)
     .where(eq(officials.teamId, team[0].id));
 
+  // Get existing jerseys for this team
+  const teamJerseysData = await db
+    .select()
+    .from(teamJerseys)
+    .where(eq(teamJerseys.teamId, team[0].id));
+
   return {
     ...team[0],
     players: teamPlayers,
-    officials: teamOfficials
+    officials: teamOfficials,
+    jerseys: teamJerseysData
   };
 }
 
