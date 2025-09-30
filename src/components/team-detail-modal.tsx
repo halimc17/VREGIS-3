@@ -79,6 +79,29 @@ export default function TeamDetailModal({ open, onOpenChange, teamId }: TeamDeta
     }
   }, [open, teamId])
 
+  // Prevent body scroll lock when modal is open - force override with important
+  useEffect(() => {
+    if (open) {
+      // Add a style tag with !important to override Radix UI's overflow hidden
+      const styleTag = document.createElement('style')
+      styleTag.id = 'modal-scroll-override'
+      styleTag.innerHTML = `
+        body[data-scroll-locked] {
+          overflow: auto !important;
+          padding-right: 0 !important;
+        }
+      `
+      document.head.appendChild(styleTag)
+
+      return () => {
+        const tag = document.getElementById('modal-scroll-override')
+        if (tag) {
+          tag.remove()
+        }
+      }
+    }
+  }, [open])
+
   const fetchTeamDetails = async () => {
     if (!teamId) return
 
@@ -126,7 +149,7 @@ export default function TeamDetailModal({ open, onOpenChange, teamId }: TeamDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[90vw] max-w-[90vw] sm:max-w-[90vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[90vw] max-w-[90vw] sm:max-w-[90vw] !absolute !top-[2rem] !translate-y-0 left-[50%] -translate-x-1/2 my-8 mb-16" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Detail Tim</DialogTitle>
         </DialogHeader>
