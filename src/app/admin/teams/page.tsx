@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Plus, MoreHorizontal, Edit, Trash2, Filter, X, Search, Copy, Link } from "lucide-react"
+import { Plus, MoreHorizontal, Edit, Trash2, Filter, X, Search, Copy, Link, Eye } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Team, Tournament } from "@/types"
 import TeamFormDialog from "@/components/team-form-dialog"
 import EditTeamDialog from "@/components/edit-team-dialog"
 import DeleteTeamDialog from "@/components/delete-team-dialog"
+import TeamDetailModal from "@/components/team-detail-modal"
 
 export default function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([])
@@ -23,6 +24,7 @@ export default function TeamsPage() {
   const [showTeamForm, setShowTeamForm] = useState(false)
   const [editingTeam, setEditingTeam] = useState<Team | null>(null)
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null)
+  const [viewingTeamId, setViewingTeamId] = useState<string | null>(null)
   const [tournamentFilter, setTournamentFilter] = useState<string>("all")
   const [genderFilter, setGenderFilter] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -281,6 +283,10 @@ export default function TeamsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setViewingTeamId(team.id)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Tim Detail
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => copyTeamURL(team)}>
                           <Link className="mr-2 h-4 w-4" />
                           Copy Registration URL
@@ -372,6 +378,12 @@ export default function TeamsPage() {
           fetchTeams()
           setDeletingTeam(null)
         }}
+      />
+
+      <TeamDetailModal
+        open={!!viewingTeamId}
+        onOpenChange={(open) => !open && setViewingTeamId(null)}
+        teamId={viewingTeamId}
       />
     </div>
   )

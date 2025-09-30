@@ -94,8 +94,21 @@ export function TournamentManagement() {
             setTournaments(tournaments.filter(tournament => tournament.id !== tournamentId));
             toast.success('Turnamen berhasil dihapus');
           } else {
-            const error = await response.json();
-            toast.error(`Gagal menghapus turnamen: ${error.error}`);
+            const contentType = response.headers.get('content-type');
+            let errorMessage = 'Gagal menghapus turnamen';
+
+            if (contentType?.includes('application/json')) {
+              try {
+                const error = await response.json();
+                errorMessage = error.error || error.details || errorMessage;
+              } catch {
+                errorMessage = `Server error (${response.status})`;
+              }
+            } else {
+              errorMessage = `Server error (${response.status})`;
+            }
+
+            toast.error(errorMessage);
           }
         } catch (error) {
           console.error('Error deleting tournament:', error);
@@ -210,7 +223,7 @@ export function TournamentManagement() {
                     <TableHead>Lokasi</TableHead>
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Pool</TableHead>
-                    <TableHead>Maks Pemain</TableHead>
+                    <TableHead className="text-center">Maks Pemain</TableHead>
                     <TableHead>Tim Terdaftar</TableHead>
                     <TableHead className="text-center">Aksi</TableHead>
                   </TableRow>
@@ -268,16 +281,12 @@ export function TournamentManagement() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{tournament.maxPlayersPerTeam}</span>
-                        </div>
+                      <TableCell className="text-center">
+                        <span className="text-sm">{tournament.maxPlayersPerTeam}</span>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm space-y-1">
-                          <div className="flex items-center gap-1">
-                            <Trophy className="h-3 w-3 text-muted-foreground" />
+                          <div>
                             <span className="font-medium">Total: {tournament.teamCount || 0}</span>
                           </div>
                           {tournament.category === 'mixed' ? (

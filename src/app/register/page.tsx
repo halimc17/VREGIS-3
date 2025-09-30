@@ -66,9 +66,9 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (data.success) {
-        // Filter only upcoming tournaments with open registration
+        // Filter only open tournaments with open registration
         const availableTournaments = data.tournaments.filter((tournament: Tournament) => {
-          return tournament.status === 'upcoming' &&
+          return tournament.status === 'open' &&
                  new Date() < new Date(tournament.registrationDeadline)
         })
         setTournaments(availableTournaments)

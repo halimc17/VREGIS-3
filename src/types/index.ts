@@ -24,7 +24,7 @@ export interface TournamentFormData {
   maxTeams: number;
   registrationDeadline: string;
   entryFee: number;
-  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  status: 'open' | 'closed';
 }
 
 export interface TeamRegistrationFormData {

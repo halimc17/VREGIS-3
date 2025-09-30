@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/connection';
-import { tournaments } from '@/lib/db/schema';
+import { tournaments, teams, registrations, players, officials, teamJerseys, documents } from '@/lib/db/schema';
 import { getCurrentUser } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
 const updateTournamentSchema = z.object({
@@ -117,33 +117,127 @@ export async function PUT(
 // DELETE /api/tournaments/[id] - Delete tournament
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
+  console.log('[DELETE] Starting delete operation...');
+
   try {
-    const { id } = await params;
-    const user = await getCurrentUser();
+    // Resolve params first
+    const resolvedParams = await context.params;
+    const { id } = resolvedParams;
+    console.log('[DELETE] Tournament ID:', id);
+
+    if (!id) {
+      console.log('[DELETE] No ID provided');
+      return NextResponse.json({ error: 'Tournament ID is required' }, { status: 400 });
+    }
+
+    // Get current user
+    let user;
+    try {
+      user = await getCurrentUser();
+      console.log('[DELETE] User:', user ? `${user.email} (${user.role})` : 'null');
+    } catch (authError) {
+      console.error('[DELETE] Auth error:', authError);
+      return NextResponse.json({ error: 'Authentication error' }, { status: 401 });
+    }
 
     if (!user || user.role !== 'administrator') {
+      console.log('[DELETE] Unauthorized - no user or not admin');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if tournament exists
-    const [existingTournament] = await db
-      .select()
-      .from(tournaments)
-      .where(eq(tournaments.id, id))
-      .limit(1);
+    let existingTournament;
+    try {
+      [existingTournament] = await db
+        .select()
+        .from(tournaments)
+        .where(eq(tournaments.id, id))
+        .limit(1);
+      console.log('[DELETE] Tournament exists:', !!existingTournament);
+    } catch (dbError) {
+      console.error('[DELETE] Database error checking tournament:', dbError);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
 
     if (!existingTournament) {
+      console.log('[DELETE] Tournament not found');
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
     }
 
-    // Delete tournament
-    await db.delete(tournaments).where(eq(tournaments.id, id));
+    // Delete related data in proper order (from child to parent)
+    console.log('[DELETE] Starting cascade delete...');
+    try {
+      // Get all team IDs for this tournament
+      const tournamentTeams = await db
+        .select({ id: teams.id })
+        .from(teams)
+        .where(eq(teams.tournamentId, id));
 
-    return NextResponse.json({ message: 'Tournament deleted successfully' });
+      const teamIds = tournamentTeams.map(t => t.id);
+      console.log('[DELETE] Found teams:', teamIds.length);
+
+      if (teamIds.length > 0) {
+        // Get all player IDs from these teams
+        const teamPlayers = await db
+          .select({ id: players.id })
+          .from(players)
+          .where(inArray(players.teamId, teamIds));
+
+        const playerIds = teamPlayers.map(p => p.id);
+        console.log('[DELETE] Found players:', playerIds.length);
+
+        // Delete documents for all players
+        if (playerIds.length > 0) {
+          await db.delete(documents).where(inArray(documents.playerId, playerIds));
+          console.log('[DELETE] Documents deleted');
+        }
+
+        // Delete players
+        await db.delete(players).where(inArray(players.teamId, teamIds));
+        console.log('[DELETE] Players deleted');
+
+        // Delete officials
+        await db.delete(officials).where(inArray(officials.teamId, teamIds));
+        console.log('[DELETE] Officials deleted');
+
+        // Delete team jerseys
+        await db.delete(teamJerseys).where(inArray(teamJerseys.teamId, teamIds));
+        console.log('[DELETE] Team jerseys deleted');
+      }
+
+      // Delete registrations
+      await db.delete(registrations).where(eq(registrations.tournamentId, id));
+      console.log('[DELETE] Registrations deleted');
+
+      // Delete teams
+      await db.delete(teams).where(eq(teams.tournamentId, id));
+      console.log('[DELETE] Teams deleted');
+
+      // Finally delete tournament
+      await db.delete(tournaments).where(eq(tournaments.id, id));
+      console.log('[DELETE] Tournament deleted successfully');
+    } catch (dbError) {
+      console.error('[DELETE] Database error during deletion:', dbError);
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return NextResponse.json({
+        error: 'Failed to delete tournament',
+        details: errorMessage
+      }, { status: 500 });
+    }
+
+    console.log('[DELETE] All operations completed successfully');
+    return NextResponse.json({ message: 'Tournament deleted successfully' }, { status: 200 });
   } catch (error) {
-    console.error('Error deleting tournament:', error);
-    return NextResponse.json({ error: 'Failed to delete tournament' }, { status: 500 });
+    console.error('[DELETE] Unexpected error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('[DELETE] Error stack:', errorStack);
+
+    return NextResponse.json({
+      error: 'Failed to delete tournament',
+      details: errorMessage
+    }, { status: 500 });
   }
 }
